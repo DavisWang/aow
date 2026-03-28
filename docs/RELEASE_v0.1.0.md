@@ -44,8 +44,12 @@ Before release:
 
 GitHub Pages is the intended static hosting target.
 
-Expected release flow:
-1. push `main`
-2. let the Pages workflow build and deploy
-3. verify the published URL
+Published outputs:
+- repo: [https://github.com/DavisWang/aow](https://github.com/DavisWang/aow)
+- site: [https://daviswang.github.io/aow/](https://daviswang.github.io/aow/)
 
+Release flow used for `v0.1.0`:
+1. push `main`
+2. enable the Pages site for workflow-based builds
+3. run the Pages workflow
+4. verify the published URL returns `HTTP 200`

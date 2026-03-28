@@ -8,8 +8,8 @@
 - [x] Implement unit, tower, projectile, super, economy, and enemy AI systems.
 - [x] Document the current architecture, release scope, and local workflow.
 - [x] Run final release verification for `v0.1.0`.
-- [ ] Create the GitHub repository and push `main`.
-- [ ] Confirm the GitHub Pages deployment path is wired correctly.
+- [x] Create the GitHub repository and push `main`.
+- [x] Confirm the GitHub Pages deployment path is wired correctly.
 
 ## Review
 
@@ -25,5 +25,8 @@
 - Final verification:
   - `npm run test` passes
   - `npm run build` passes
+- Published outputs:
+  - repository: `https://github.com/DavisWang/aow`
+  - live site: `https://daviswang.github.io/aow/`
 - Remaining non-blocker:
   - production bundle is still large because Phaser ships as a large chunk
