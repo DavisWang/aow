@@ -1,0 +1,29 @@
+:root {
+  color: #f6f0d7;
+  background:
+    radial-gradient(circle at top, rgba(248, 201, 92, 0.2), transparent 36%),
+    linear-gradient(180deg, #1f3b61 0%, #4f7684 42%, #977451 42%, #6f5337 100%);
+  font-family: "Courier New", monospace;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  image-rendering: pixelated;
+}
+
+canvas {
+  display: block;
+}

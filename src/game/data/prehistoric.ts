@@ -1,0 +1,204 @@
+import { AGE_UP_XP } from "../config";
+import { AIScriptStep, AgeDefinition, TowerDefinition, UnitDefinition } from "../types";
+
+// The v0.1 slice is data-driven. The match system reads these definitions to
+// build entities and AI behavior without hard-coding prehistoric-specific rules.
+const units: UnitDefinition[] = [
+  {
+    id: "caveman",
+    name: "Caveman",
+    role: "melee",
+    cost: 60,
+    buildTime: 0.65,
+    maxHp: 150,
+    speed: 48,
+    range: 30,
+    attackDamage: 16,
+    attackCadence: 1,
+    rewardMoney: 35,
+    rewardXp: 14,
+    color: 0xdfa65a,
+    width: 48,
+    height: 58,
+  },
+  {
+    id: "stonethrower",
+    name: "Stonethrower",
+    role: "ranged",
+    cost: 95,
+    buildTime: 1.45,
+    maxHp: 100,
+    speed: 42,
+    range: 230,
+    attackDamage: 22,
+    attackCadence: 1.35,
+    rewardMoney: 45,
+    rewardXp: 22,
+    color: 0xb4c7de,
+    width: 44,
+    height: 54,
+    projectile: {
+      speed: 470,
+      radius: 7,
+      color: 0xd8dddf,
+    },
+  },
+  {
+    id: "dino-rider",
+    name: "Dino Rider",
+    role: "mega",
+    cost: 180,
+    buildTime: 2.7,
+    maxHp: 360,
+    speed: 36,
+    range: 44,
+    attackDamage: 40,
+    attackCadence: 1.6,
+    rewardMoney: 90,
+    rewardXp: 40,
+    color: 0x65b66c,
+    width: 70,
+    height: 70,
+  },
+];
+
+const towers: TowerDefinition[] = [
+  {
+    id: "stone-guard",
+    name: "Stone Guard",
+    cost: 110,
+    range: 300,
+    damage: 15,
+    cadence: 0.9,
+    color: 0x7d8489,
+    slotType: "prehistoric",
+    projectile: {
+      speed: 520,
+      radius: 7,
+      color: 0xc2c7cb,
+    },
+  },
+  {
+    id: "fossil-catapult",
+    name: "Fossil Catapult",
+    cost: 155,
+    range: 360,
+    damage: 26,
+    cadence: 1.55,
+    color: 0xaf8352,
+    slotType: "prehistoric",
+    projectile: {
+      speed: 420,
+      radius: 9,
+      color: 0xddbb88,
+    },
+  },
+  {
+    id: "ember-totem",
+    name: "Ember Totem",
+    cost: 210,
+    range: 325,
+    damage: 33,
+    cadence: 1.2,
+    color: 0xf27652,
+    slotType: "prehistoric",
+    projectile: {
+      speed: 600,
+      radius: 8,
+      color: 0xf9b355,
+    },
+  },
+];
+
+export const PREHISTORIC_AGE: AgeDefinition = {
+  id: "prehistoric",
+  theme: "Prehistoric",
+  unlockXp: AGE_UP_XP,
+  units,
+  towers,
+  super: {
+    id: "meteor-shower",
+    name: "Meteor Shower",
+    cooldown: 24,
+    duration: 4.5,
+    projectileCadence: 0.18,
+    impactDamage: 36,
+    impactRadius: 58,
+    projectileSpeed: 620,
+    color: 0xff9340,
+  },
+  base: {
+    id: "prehistoric-base",
+    name: "Prehistoric Base",
+    maxHealth: 900,
+    width: 145,
+    height: 210,
+    color: 0x7d5636,
+    towerSlots: 3,
+    towerSlotOffsets: [-36, 0, 36],
+  },
+};
+
+export const PREHISTORIC_AI_SCRIPT: AIScriptStep[] = [
+  // The enemy wave cadence is intentionally steady so the battlefield remains
+  // active during testing and release demos.
+  {
+    id: "enemy-unit-wave",
+    action: "buy-unit",
+    startsAt: 0.8,
+    interval: 1.45,
+    unitWeights: {
+      caveman: 0.62,
+      stonethrower: 0.24,
+      "dino-rider": 0.14,
+    },
+  },
+  {
+    id: "enemy-tower-1",
+    action: "buy-tower",
+    startsAt: 14,
+    once: true,
+    towerId: towers[0].id,
+  },
+  {
+    id: "enemy-tower-2",
+    action: "buy-tower",
+    startsAt: 32,
+    once: true,
+    towerId: towers[1].id,
+  },
+  {
+    id: "enemy-tower-3",
+    action: "buy-tower",
+    startsAt: 52,
+    once: true,
+    towerId: towers[2].id,
+  },
+  {
+    id: "enemy-super",
+    action: "cast-super",
+    startsAt: 8,
+    interval: 2,
+    minEnemyUnits: 2,
+  },
+];
+
+export function getUnitDefinition(unitId: string): UnitDefinition {
+  const definition = PREHISTORIC_AGE.units.find((unit) => unit.id === unitId);
+
+  if (!definition) {
+    throw new Error(`Unknown unit definition: ${unitId}`);
+  }
+
+  return definition;
+}
+
+export function getTowerDefinition(towerId: string): TowerDefinition {
+  const definition = PREHISTORIC_AGE.towers.find((tower) => tower.id === towerId);
+
+  if (!definition) {
+    throw new Error(`Unknown tower definition: ${towerId}`);
+  }
+
+  return definition;
+}

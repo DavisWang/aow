@@ -1,0 +1,30 @@
+{
+  "name": "aow",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Age of War prehistoric vertical slice built with Phaser and TypeScript",
+  "homepage": "https://daviswang.github.io/aow/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DavisWang/aow.git"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "phaser": "^3"
+  },
+  "devDependencies": {
+    "@types/node": ">=20 <25",
+    "typescript": "^5.4.0",
+    "vite": ">=6 <8",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
