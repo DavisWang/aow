@@ -1,7 +1,8 @@
 :root {
   color: #f6f0d7;
   background:
-    radial-gradient(circle at top, rgba(248, 201, 92, 0.2), transparent 36%),
+    radial-gradient(circle at 22% 18%, rgba(248, 201, 92, 0.34), transparent 20%),
+    radial-gradient(circle at 72% 12%, rgba(240, 236, 212, 0.14), transparent 16%),
     linear-gradient(180deg, #1f3b61 0%, #4f7684 42%, #977451 42%, #6f5337 100%);
   font-family: "Courier New", monospace;
   color-scheme: dark;
@@ -22,8 +23,22 @@ body,
 
 body {
   image-rendering: pixelated;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 24% 18%, rgba(248, 201, 92, 0.32), transparent 18%),
+    linear-gradient(180deg, #274567 0%, #6d97b8 46%, #8f6a43 46%, #5f452d 100%);
+}
+
+#app {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 canvas {
   display: block;
+  box-shadow:
+    0 0 0 4px rgba(234, 194, 116, 0.34),
+    0 30px 70px rgba(0, 0, 0, 0.38);
 }

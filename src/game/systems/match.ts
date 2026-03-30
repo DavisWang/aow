@@ -5,7 +5,7 @@ import {
   PLAYER_BASE_X,
   UNIT_SPACING,
 } from "../config";
-import { getTowerDefinition, getUnitDefinition, PREHISTORIC_AGE } from "../data/prehistoric";
+import { getNextAgeDefinition, getTowerDefinition, getUnitDefinition, STARTING_AGE } from "../data/ages";
 import {
   AIScriptStep,
   AgeDefinition,
@@ -19,12 +19,10 @@ import {
   UnitDefinition,
 } from "../types";
 
-// These constants shape the current feel of the prehistoric slice. Most are
-// intentionally conservative because v0.1 optimizes for stable playability,
-// not final balance.
+// These constants shape the current feel of the game. New ages should mostly
+// arrive as content definitions plus age-progression logic, not scene hacks.
 const PLAYER_SPAWN_X = PLAYER_BASE_X + 120;
 const ENEMY_SPAWN_X = ENEMY_BASE_X - 120;
-const PLAYER_TOWER_Y = GROUND_Y - PREHISTORIC_AGE.base.height + 34;
 const UNIT_BASE_Y = GROUND_Y - 30;
 const SUPER_SPAWN_Y = 30;
 const MAX_BUILD_QUEUE_LENGTH = 5;
@@ -37,19 +35,21 @@ const KILL_REWARD_MULTIPLIER: Record<Side, number> = {
   enemy: 2,
 };
 const PROJECTILE_HIT_PADDING = 18;
+const TOWER_SELL_REFUND_RATIO = 0.7;
 
 export function cloneAISteps(steps: AIScriptStep[]): AIScriptStep[] {
   return steps.map((step) => ({ ...step, unitWeights: step.unitWeights ? { ...step.unitWeights } : undefined }));
 }
 
-export function createInitialMatchState(age: AgeDefinition): MatchState {
-  // Reconstructing match state from scratch keeps restarts deterministic and
-  // avoids scene-specific partial reset bugs.
+export function createInitialMatchState(startingAge: AgeDefinition = STARTING_AGE): MatchState {
   return {
     phase: "active",
     winner: null,
     elapsedTime: 0,
-    age,
+    ages: {
+      player: startingAge,
+      enemy: startingAge,
+    },
     economies: {
       player: {
         money: DEFAULT_STARTING_MONEY,
@@ -61,8 +61,8 @@ export function createInitialMatchState(age: AgeDefinition): MatchState {
       },
     },
     bases: {
-      player: createBaseState("player", age),
-      enemy: createBaseState("enemy", age),
+      player: createBaseState("player", startingAge),
+      enemy: createBaseState("enemy", startingAge),
     },
     buildQueues: {
       player: [],
@@ -94,6 +94,34 @@ export function createInitialMatchState(age: AgeDefinition): MatchState {
   };
 }
 
+export function getAgeForSide(state: MatchState, side: Side): AgeDefinition {
+  return state.ages[side];
+}
+
+export function canAdvanceAge(state: MatchState, side: Side): boolean {
+  const currentAge = getAgeForSide(state, side);
+  return getNextAgeDefinition(currentAge.id) !== null && state.economies[side].experience >= currentAge.unlockXp;
+}
+
+export function advanceAge(state: MatchState, side: Side): boolean {
+  if (!canAdvanceAge(state, side)) {
+    return false;
+  }
+
+  const currentAge = getAgeForSide(state, side);
+  const nextAge = getNextAgeDefinition(currentAge.id);
+
+  if (!nextAge) {
+    return false;
+  }
+
+  state.economies[side].experience = Math.max(0, state.economies[side].experience - currentAge.unlockXp);
+  state.ages[side] = nextAge;
+  upgradeBaseState(state, side, nextAge);
+  repositionTowersForSide(state, side);
+  return true;
+}
+
 function createBaseState(side: Side, age: AgeDefinition): EntityState {
   return {
     id: `${side}-base`,
@@ -116,13 +144,36 @@ function createBaseState(side: Side, age: AgeDefinition): EntityState {
   };
 }
 
+function upgradeBaseState(state: MatchState, side: Side, age: AgeDefinition): void {
+  const base = state.bases[side];
+  const hpRatio = base.maxHp > 0 ? base.hp / base.maxHp : 1;
+  base.definitionId = age.base.id;
+  base.y = GROUND_Y - age.base.height / 2;
+  base.maxHp = age.base.maxHealth;
+  base.hp = Math.max(1, Math.min(age.base.maxHealth, age.base.maxHealth * hpRatio));
+  base.bodyWidth = age.base.width;
+  base.bodyHeight = age.base.height;
+  base.color = age.base.color;
+}
+
+function repositionTowersForSide(state: MatchState, side: Side): void {
+  const age = getAgeForSide(state, side);
+  const base = state.bases[side];
+  const towers = state.entities.filter((entity) => entity.side === side && entity.entityType === "tower" && entity.hp > 0);
+
+  for (const tower of towers) {
+    const slotIndex = tower.slotIndex ?? 0;
+    const xOffset = age.base.towerSlotOffsets[slotIndex] ?? 0;
+    tower.x = base.x + xOffset;
+    tower.y = GROUND_Y - age.base.height + 34;
+  }
+}
+
 export function updateMatchState(state: MatchState, dt: number, aiSteps: AIScriptStep[]): void {
   if (state.phase !== "active") {
     return;
   }
 
-  // Update order matters: economy and queues advance before AI decisions, and
-  // combat resolves before final win/loss checks.
   state.elapsedTime += dt;
 
   applyPassiveIncome(state, dt);
@@ -155,8 +206,6 @@ function updateBuildQueues(state: MatchState, dt: number): void {
     let carry = dt;
     const queue = state.buildQueues[side];
 
-    // Carry leftover frame time forward so multiple queued units can complete
-    // in a single update when the frame crosses more than one threshold.
     while (queue.length > 0 && carry > 0) {
       const current = queue[0];
       current.remainingBuildTime -= carry;
@@ -173,9 +222,11 @@ function updateBuildQueues(state: MatchState, dt: number): void {
 }
 
 function runAIScript(state: MatchState, aiSteps: AIScriptStep[]): void {
-  // The current opponent is intentionally script-driven rather than reactive.
-  // That keeps the AI easy to tune during the vertical-slice phase.
   for (const step of aiSteps) {
+    if (step.requiredAgeId && getAgeForSide(state, "enemy").id !== step.requiredAgeId) {
+      continue;
+    }
+
     if (state.elapsedTime < step.startsAt) {
       continue;
     }
@@ -213,6 +264,8 @@ function executeAIStep(state: MatchState, step: AIScriptStep): boolean {
 
       return activateSuper(state, "enemy");
     }
+    case "advance-age":
+      return advanceAge(state, "enemy");
   }
 }
 
@@ -239,8 +292,10 @@ export function purchaseUnit(state: MatchState, side: Side, unitId: string): boo
   const definition = getUnitDefinition(unitId);
   const economy = state.economies[side];
 
-  // Queue capacity is enforced in the simulation layer so UI and gameplay rules
-  // cannot drift apart.
+  if (!getAgeForSide(state, side).units.some((unit) => unit.id === unitId)) {
+    return false;
+  }
+
   if (economy.money < definition.cost || state.buildQueues[side].length >= MAX_BUILD_QUEUE_LENGTH) {
     return false;
   }
@@ -263,6 +318,10 @@ export function purchaseTower(state: MatchState, side: Side, towerId: string): b
   const definition = getTowerDefinition(towerId);
   const economy = state.economies[side];
 
+  if (!getAgeForSide(state, side).towers.some((tower) => tower.id === towerId)) {
+    return false;
+  }
+
   if (economy.money < definition.cost) {
     return false;
   }
@@ -274,6 +333,25 @@ export function purchaseTower(state: MatchState, side: Side, towerId: string): b
 
   economy.money -= definition.cost;
   state.entities.push(createTowerState(state, side, definition, openSlot));
+  return true;
+}
+
+export function getTowerSellValue(towerId: string): number {
+  return Math.floor(getTowerDefinition(towerId).cost * TOWER_SELL_REFUND_RATIO);
+}
+
+export function sellTower(state: MatchState, side: Side, towerEntityId: string): boolean {
+  const towerIndex = state.entities.findIndex(
+    (entity) => entity.id === towerEntityId && entity.side === side && entity.entityType === "tower" && entity.hp > 0,
+  );
+
+  if (towerIndex === -1) {
+    return false;
+  }
+
+  const tower = state.entities[towerIndex];
+  state.economies[side].money += getTowerSellValue(tower.definitionId);
+  state.entities.splice(towerIndex, 1);
   return true;
 }
 
@@ -304,8 +382,9 @@ function createUnitState(state: MatchState, side: Side, definition: UnitDefiniti
 }
 
 function createTowerState(state: MatchState, side: Side, definition: TowerDefinition, slotIndex: number): EntityState {
+  const age = getAgeForSide(state, side);
   const base = state.bases[side];
-  const xOffset = PREHISTORIC_AGE.base.towerSlotOffsets[slotIndex] ?? 0;
+  const xOffset = age.base.towerSlotOffsets[slotIndex] ?? 0;
 
   return {
     id: `entity-${state.nextEntityId++}`,
@@ -313,7 +392,7 @@ function createTowerState(state: MatchState, side: Side, definition: TowerDefini
     side,
     definitionId: definition.id,
     x: base.x + xOffset,
-    y: PLAYER_TOWER_Y,
+    y: GROUND_Y - age.base.height + 34,
     hp: 120,
     maxHp: 120,
     attackCooldown: 0.25,
@@ -337,7 +416,7 @@ function getOpenTowerSlot(state: MatchState, side: Side): number | null {
       .map((tower) => tower.slotIndex),
   );
 
-  for (let slotIndex = 0; slotIndex < PREHISTORIC_AGE.base.towerSlots; slotIndex += 1) {
+  for (let slotIndex = 0; slotIndex < getAgeForSide(state, side).base.towerSlots; slotIndex += 1) {
     if (!taken.has(slotIndex)) {
       return slotIndex;
     }
@@ -347,14 +426,16 @@ function getOpenTowerSlot(state: MatchState, side: Side): number | null {
 }
 
 export function activateSuper(state: MatchState, side: Side): boolean {
+  const age = getAgeForSide(state, side);
+
   if (state.elapsedTime < state.cooldowns.superReadyAt[side]) {
     return false;
   }
 
-  state.cooldowns.superReadyAt[side] = state.elapsedTime + state.age.super.cooldown;
+  state.cooldowns.superReadyAt[side] = state.elapsedTime + age.super.cooldown;
   state.supers[side] = {
     active: true,
-    endsAt: state.elapsedTime + state.age.super.duration,
+    endsAt: state.elapsedTime + age.super.duration,
     nextVolleyAt: state.elapsedTime,
   };
   return true;
@@ -376,14 +457,16 @@ function updateSuperVolleys(state: MatchState): void {
       continue;
     }
 
+    const age = getAgeForSide(state, side);
     while (state.elapsedTime >= superState.nextVolleyAt && superState.nextVolleyAt <= superState.endsAt) {
       spawnSuperProjectile(state, side);
-      superState.nextVolleyAt += state.age.super.projectileCadence;
+      superState.nextVolleyAt += age.super.projectileCadence;
     }
   }
 }
 
 function spawnSuperProjectile(state: MatchState, side: Side): void {
+  const age = getAgeForSide(state, side);
   const targetSide: Side = side === "player" ? "enemy" : "player";
   const fieldMinX = targetSide === "enemy" ? PLAYER_BASE_X + 560 : PLAYER_BASE_X + 120;
   const fieldMaxX = targetSide === "enemy" ? ENEMY_BASE_X - 120 : ENEMY_BASE_X - 560;
@@ -402,11 +485,12 @@ function spawnSuperProjectile(state: MatchState, side: Side): void {
     startY: SUPER_SPAWN_Y,
     targetX,
     targetY,
-    speed: state.age.super.projectileSpeed,
-    damage: state.age.super.impactDamage,
+    speed: age.super.projectileSpeed,
+    damage: age.super.impactDamage,
     radius: 10,
-    impactRadius: state.age.super.impactRadius,
-    color: state.age.super.color,
+    impactRadius: age.super.impactRadius,
+    color: age.super.color,
+    visualStyle: age.super.visualStyle,
   });
 }
 
@@ -449,7 +533,7 @@ function updateTowers(state: MatchState): void {
       continue;
     }
 
-    const target = findNearestEnemyInRange(state, tower.side, tower.x, tower.range);
+    const target = findNearestEnemyInRange(state, tower.side, getTowerFiringAnchorX(state, tower.side), tower.range);
     if (!target) {
       continue;
     }
@@ -486,8 +570,7 @@ function resolveProjectileImpact(state: MatchState, projectile: ProjectileState)
     .filter((entity) => entity.hp > 0 && entity.side === projectile.targetSide && entity.entityType === "unit")
     .filter((entity) => projectileHitsEntity(projectile, entity))
     .sort(
-      (left, right) =>
-        projectileDistanceToEntity(projectile, left) - projectileDistanceToEntity(projectile, right),
+      (left, right) => projectileDistanceToEntity(projectile, left) - projectileDistanceToEntity(projectile, right),
     );
 
   if (enemies.length > 0) {
@@ -576,6 +659,7 @@ function spawnProjectile(
     radius: projectile.radius,
     impactRadius: projectile.radius * 4,
     color: projectile.color,
+    visualStyle: projectile.visualStyle,
   });
 }
 
@@ -631,30 +715,72 @@ function distanceToEntityFromX(x: number, entity: EntityState): number {
 }
 
 function findNearestEnemyAhead(state: MatchState, unit: EntityState): EntityState | null {
-  const enemies = state.entities
-    .filter((entity) => entity.hp > 0 && entity.entityType === "unit" && entity.side !== unit.side)
-    .filter((entity) => (unit.side === "player" ? entity.x >= unit.x : entity.x <= unit.x))
-    .sort((left, right) => distanceBetweenEntities(unit, left) - distanceBetweenEntities(unit, right));
+  let bestTarget: EntityState | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
 
-  return enemies[0] ?? null;
+  for (const entity of state.entities) {
+    if (entity.hp <= 0 || entity.entityType !== "unit" || entity.side === unit.side) {
+      continue;
+    }
+
+    if (unit.side === "player" ? entity.x < unit.x : entity.x > unit.x) {
+      continue;
+    }
+
+    const distance = distanceBetweenEntities(unit, entity);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestTarget = entity;
+    }
+  }
+
+  return bestTarget;
 }
 
 function findNearestAllyAhead(state: MatchState, unit: EntityState): EntityState | null {
-  const allies = state.entities
-    .filter((entity) => entity.id !== unit.id && entity.hp > 0 && entity.entityType === "unit" && entity.side === unit.side)
-    .filter((entity) => (unit.side === "player" ? entity.x > unit.x : entity.x < unit.x))
-    .sort((left, right) => Math.abs(left.x - unit.x) - Math.abs(right.x - unit.x));
+  let bestTarget: EntityState | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
 
-  return allies[0] ?? null;
+  for (const entity of state.entities) {
+    if (entity.id === unit.id || entity.hp <= 0 || entity.entityType !== "unit" || entity.side !== unit.side) {
+      continue;
+    }
+
+    if (unit.side === "player" ? entity.x <= unit.x : entity.x >= unit.x) {
+      continue;
+    }
+
+    const distance = Math.abs(entity.x - unit.x);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestTarget = entity;
+    }
+  }
+
+  return bestTarget;
 }
 
 function findNearestEnemyInRange(state: MatchState, side: Side, x: number, range: number): EntityState | null {
-  const candidates = state.entities
-    .filter((entity) => entity.hp > 0 && entity.entityType === "unit" && entity.side !== side)
-    .filter((entity) => distanceToEntityFromX(x, entity) <= range)
-    .sort((left, right) => distanceToEntityFromX(x, left) - distanceToEntityFromX(x, right));
+  let bestTarget: EntityState | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
 
-  return candidates[0] ?? null;
+  for (const entity of state.entities) {
+    if (entity.hp <= 0 || entity.entityType !== "unit" || entity.side === side) {
+      continue;
+    }
+
+    const distance = distanceToEntityFromX(x, entity);
+    if (distance > range) {
+      continue;
+    }
+
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestTarget = entity;
+    }
+  }
+
+  return bestTarget;
 }
 
 function applyDamageToEntity(state: MatchState, entity: EntityState, damage: number, attackerSide: Side): void {
@@ -705,13 +831,18 @@ export function countUnitsForSide(state: MatchState, side: Side): number {
 
 export function canAffordUnit(state: MatchState, side: Side, unitId: string): boolean {
   return (
+    getAgeForSide(state, side).units.some((unit) => unit.id === unitId) &&
     state.economies[side].money >= getUnitDefinition(unitId).cost &&
     state.buildQueues[side].length < MAX_BUILD_QUEUE_LENGTH
   );
 }
 
 export function canAffordTower(state: MatchState, side: Side, towerId: string): boolean {
-  return state.economies[side].money >= getTowerDefinition(towerId).cost && getOpenTowerSlot(state, side) !== null;
+  return (
+    getAgeForSide(state, side).towers.some((tower) => tower.id === towerId) &&
+    state.economies[side].money >= getTowerDefinition(towerId).cost &&
+    getOpenTowerSlot(state, side) !== null
+  );
 }
 
 export function getBuildQueue(state: MatchState, side: Side): BuildQueueEntry[] {
@@ -728,6 +859,18 @@ export function getSuperCooldownRemaining(state: MatchState, side: Side): number
 
 export function getTowerCount(state: MatchState, side: Side): number {
   return state.entities.filter((entity) => entity.side === side && entity.entityType === "tower" && entity.hp > 0).length;
+}
+
+function getTowerFiringAnchorX(state: MatchState, side: Side): number {
+  const base = state.bases[side];
+  const slotOffsets = getAgeForSide(state, side).base.towerSlotOffsets;
+
+  if (slotOffsets.length === 0) {
+    return base.x;
+  }
+
+  const forwardOffset = side === "player" ? Math.max(...slotOffsets) : Math.min(...slotOffsets);
+  return base.x + forwardOffset;
 }
 
 function oppositeSide(side: Side): Side {

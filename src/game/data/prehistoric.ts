@@ -10,10 +10,10 @@ const units: UnitDefinition[] = [
     role: "melee",
     cost: 60,
     buildTime: 0.65,
-    maxHp: 150,
-    speed: 48,
+    maxHp: 160,
+    speed: 54,
     range: 30,
-    attackDamage: 16,
+    attackDamage: 24,
     attackCadence: 1,
     rewardMoney: 35,
     rewardXp: 14,
@@ -27,10 +27,10 @@ const units: UnitDefinition[] = [
     role: "ranged",
     cost: 95,
     buildTime: 1.45,
-    maxHp: 100,
-    speed: 42,
+    maxHp: 110,
+    speed: 46,
     range: 230,
-    attackDamage: 22,
+    attackDamage: 32,
     attackCadence: 1.35,
     rewardMoney: 45,
     rewardXp: 22,
@@ -41,6 +41,7 @@ const units: UnitDefinition[] = [
       speed: 470,
       radius: 7,
       color: 0xd8dddf,
+      visualStyle: "stone",
     },
   },
   {
@@ -49,10 +50,10 @@ const units: UnitDefinition[] = [
     role: "mega",
     cost: 180,
     buildTime: 2.7,
-    maxHp: 360,
-    speed: 36,
+    maxHp: 380,
+    speed: 44,
     range: 44,
-    attackDamage: 40,
+    attackDamage: 70,
     attackCadence: 1.6,
     rewardMoney: 90,
     rewardXp: 40,
@@ -68,7 +69,7 @@ const towers: TowerDefinition[] = [
     name: "Stone Guard",
     cost: 110,
     range: 300,
-    damage: 15,
+    damage: 24,
     cadence: 0.9,
     color: 0x7d8489,
     slotType: "prehistoric",
@@ -76,6 +77,7 @@ const towers: TowerDefinition[] = [
       speed: 520,
       radius: 7,
       color: 0xc2c7cb,
+      visualStyle: "stone",
     },
   },
   {
@@ -83,7 +85,7 @@ const towers: TowerDefinition[] = [
     name: "Fossil Catapult",
     cost: 155,
     range: 360,
-    damage: 26,
+    damage: 38,
     cadence: 1.55,
     color: 0xaf8352,
     slotType: "prehistoric",
@@ -91,6 +93,7 @@ const towers: TowerDefinition[] = [
       speed: 420,
       radius: 9,
       color: 0xddbb88,
+      visualStyle: "fossil",
     },
   },
   {
@@ -98,7 +101,7 @@ const towers: TowerDefinition[] = [
     name: "Ember Totem",
     cost: 210,
     range: 325,
-    damage: 33,
+    damage: 52,
     cadence: 1.2,
     color: 0xf27652,
     slotType: "prehistoric",
@@ -106,6 +109,7 @@ const towers: TowerDefinition[] = [
       speed: 600,
       radius: 8,
       color: 0xf9b355,
+      visualStyle: "ember",
     },
   },
 ];
@@ -119,18 +123,19 @@ export const PREHISTORIC_AGE: AgeDefinition = {
   super: {
     id: "meteor-shower",
     name: "Meteor Shower",
-    cooldown: 24,
+    cooldown: 45,
     duration: 4.5,
     projectileCadence: 0.18,
-    impactDamage: 36,
+    impactDamage: 42,
     impactRadius: 58,
     projectileSpeed: 620,
     color: 0xff9340,
+    visualStyle: "meteor",
   },
   base: {
     id: "prehistoric-base",
     name: "Prehistoric Base",
-    maxHealth: 900,
+    maxHealth: 1_100,
     width: 145,
     height: 210,
     color: 0x7d5636,
@@ -145,6 +150,7 @@ export const PREHISTORIC_AI_SCRIPT: AIScriptStep[] = [
   {
     id: "enemy-unit-wave",
     action: "buy-unit",
+    requiredAgeId: "prehistoric",
     startsAt: 0.8,
     interval: 1.45,
     unitWeights: {
@@ -156,6 +162,7 @@ export const PREHISTORIC_AI_SCRIPT: AIScriptStep[] = [
   {
     id: "enemy-tower-1",
     action: "buy-tower",
+    requiredAgeId: "prehistoric",
     startsAt: 14,
     once: true,
     towerId: towers[0].id,
@@ -163,6 +170,7 @@ export const PREHISTORIC_AI_SCRIPT: AIScriptStep[] = [
   {
     id: "enemy-tower-2",
     action: "buy-tower",
+    requiredAgeId: "prehistoric",
     startsAt: 32,
     once: true,
     towerId: towers[1].id,
@@ -170,6 +178,7 @@ export const PREHISTORIC_AI_SCRIPT: AIScriptStep[] = [
   {
     id: "enemy-tower-3",
     action: "buy-tower",
+    requiredAgeId: "prehistoric",
     startsAt: 52,
     once: true,
     towerId: towers[2].id,
@@ -177,28 +186,9 @@ export const PREHISTORIC_AI_SCRIPT: AIScriptStep[] = [
   {
     id: "enemy-super",
     action: "cast-super",
+    requiredAgeId: "prehistoric",
     startsAt: 8,
     interval: 2,
     minEnemyUnits: 2,
   },
 ];
-
-export function getUnitDefinition(unitId: string): UnitDefinition {
-  const definition = PREHISTORIC_AGE.units.find((unit) => unit.id === unitId);
-
-  if (!definition) {
-    throw new Error(`Unknown unit definition: ${unitId}`);
-  }
-
-  return definition;
-}
-
-export function getTowerDefinition(towerId: string): TowerDefinition {
-  const definition = PREHISTORIC_AGE.towers.find((tower) => tower.id === towerId);
-
-  if (!definition) {
-    throw new Error(`Unknown tower definition: ${towerId}`);
-  }
-
-  return definition;
-}

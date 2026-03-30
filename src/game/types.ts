@@ -3,16 +3,33 @@
 // possible instead of introducing scene-specific state shapes.
 export type Side = "player" | "enemy";
 export type MatchPhase = "active" | "ended";
+export type MatchMode = "standard" | "test";
 export type UnitRole = "melee" | "ranged" | "mega";
 export type EntityType = "unit" | "tower" | "base";
-export type AgeId = "prehistoric";
+export type AgeId = "prehistoric" | "medieval" | "renaissance" | "modern" | "future";
 export type ProjectileSourceType = "unit" | "tower" | "super";
 export type ProjectileTargetKind = "entity" | "base" | "area";
+export type ProjectileVisualStyle =
+  | "stone"
+  | "fossil"
+  | "ember"
+  | "meteor"
+  | "arrow"
+  | "bolt"
+  | "flask"
+  | "arrow-rain"
+  | "cannonball"
+  | "bullet"
+  | "rocket"
+  | "bomb"
+  | "plasma"
+  | "laser";
 
 export interface ProjectileDefinition {
   speed: number;
   radius: number;
   color: number;
+  visualStyle: ProjectileVisualStyle;
 }
 
 export interface UnitDefinition {
@@ -56,6 +73,7 @@ export interface SuperDefinition {
   impactRadius: number;
   projectileSpeed: number;
   color: number;
+  visualStyle: ProjectileVisualStyle;
 }
 
 export interface BaseDefinition {
@@ -127,6 +145,7 @@ export interface ProjectileState {
   radius: number;
   impactRadius: number;
   color: number;
+  visualStyle: ProjectileVisualStyle;
 }
 
 export interface SuperState {
@@ -152,7 +171,7 @@ export interface MatchState {
   phase: MatchPhase;
   winner: Side | "draw" | null;
   elapsedTime: number;
-  age: AgeDefinition;
+  ages: Record<Side, AgeDefinition>;
   economies: Record<Side, EconomyState>;
   bases: Record<Side, EntityState>;
   buildQueues: Record<Side, BuildQueueEntry[]>;
@@ -167,12 +186,13 @@ export interface MatchState {
 
 export interface AIScriptStep {
   id: string;
-  action: "buy-unit" | "buy-tower" | "cast-super";
+  action: "buy-unit" | "buy-tower" | "cast-super" | "advance-age";
   startsAt: number;
   interval?: number;
   once?: boolean;
   lastTriggeredAt?: number;
   minEnemyUnits?: number;
+  requiredAgeId?: AgeId;
   unitWeights?: Record<string, number>;
   towerId?: string;
 }

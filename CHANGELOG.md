@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased
+
+- moved the project from the original vertical slice to a near-complete five-age build:
+  - `Renaissance`
+  - `Modern`
+  - `Future`
+- added the full five-age rosters, towers, bases, and supers:
+  - `Musketeer`, `Cannoneer`, `Cavalier`
+  - `Ground Infantry`, `Machine Gunner`, `Tank`
+  - `Sentinels`, `Plasma Ranger`, `Titan Walker`, `Omega Colossus`
+  - `Arquebus Tower`, `Bombard Tower`, `Alchemist Tower`
+  - `Gun Turret`, `Gatling Gun`, `Missile Launcher`
+  - `Pulse Turret`, `Drone Bay`, `Ion Blaster`
+  - `Trebuchet Volley`, `Carpet Bomb`, `Lazer Cannon`
+- extended the shared age registry and enemy AI progression through all five ages
+- expanded generated pixel-art coverage for the late-age units, towers, bases, projectiles, and impact effects
+- added tower selling, shared tower firing behavior, and icon-led `SUPER` / `ADVANCE` HUD controls
+- improved battle HUD stability with a top-band camera-scroll carveout and left/right arrow-key camera panning
+- rebalanced units, towers, supers, and age breakpoints around stronger age separation and cleaner same-age duel ordering
+- standardized all supers to a shared `45s` cooldown
+- expanded regression coverage for ladder-wide progression, balance, duel ordering, camera-scroll rules, and content gating
+- refreshed gameplay, architecture, and readme docs for the current near-complete build
+
 ## 0.1.0 - 2026-03-27
 
 Initial playable release.
@@ -10,4 +33,3 @@ Initial playable release.
 - hardened HUD interaction while the camera scrolls
 - added text fitting and regression tests for bounded UI text
 - prepared the project for GitHub Pages deployment
-

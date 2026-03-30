@@ -8,7 +8,7 @@ The game is structured around three layers:
 | --- | --- |
 | Content data | Static definitions for units, towers, supers, and base properties |
 | Simulation | Match state updates: economy, AI, movement, combat, queues, and win/loss |
-| Scene/UI | Rendering, HUD, menus, overlays, and input wiring |
+| Scene/UI | Rendering, generated art, HUD, menus, overlays, and input wiring |
 
 ## Boot Flow
 
@@ -19,24 +19,33 @@ The game is structured around three layers:
 
 ## Data Model
 
-Static content lives in [`src/game/data/prehistoric.ts`](/Users/davis.wang/Documents/aow/src/game/data/prehistoric.ts).
+Static content now lives across:
+- [`src/game/data/ages.ts`](/Users/davis.wang/Documents/aow/src/game/data/ages.ts)
+- [`src/game/data/prehistoric.ts`](/Users/davis.wang/Documents/aow/src/game/data/prehistoric.ts)
+- [`src/game/data/medieval.ts`](/Users/davis.wang/Documents/aow/src/game/data/medieval.ts)
+- [`src/game/data/renaissance.ts`](/Users/davis.wang/Documents/aow/src/game/data/renaissance.ts)
+- [`src/game/data/modern.ts`](/Users/davis.wang/Documents/aow/src/game/data/modern.ts)
+- [`src/game/data/future.ts`](/Users/davis.wang/Documents/aow/src/game/data/future.ts)
 
-The key idea is that content is data-driven:
-- units define their own cost, range, cadence, rewards, and build time
-- towers define their own range and projectile profile
-- the age definition bundles units, towers, base configuration, and super configuration
-- AI behavior is described through simple timed script entries
+Key ideas:
+- units define their own cost, range, cadence, rewards, build time, and optional projectile profile
+- towers define their own range, cadence, and projectile profile
+- an age definition bundles units, towers, base configuration, and super configuration
+- an ordered age registry decides what comes next
+- AI behavior is described through timed script entries gated by the enemy's current age
 
-This makes future ages mostly a data addition problem instead of a scene rewrite problem.
+The match state is side-aware for ages, so player and enemy can progress independently while existing entities remain valid.
+
+This keeps new ages mostly a data addition problem instead of a scene rewrite problem.
 
 ## Match Simulation
 
 [`src/game/systems/match.ts`](/Users/davis.wang/Documents/aow/src/game/systems/match.ts) is the authoritative game state update loop.
 
 It handles:
-- passive income
 - build queue processing
 - scripted enemy AI
+- side-specific age advancement
 - super volleys
 - unit movement and targeting
 - tower targeting
@@ -46,13 +55,37 @@ It handles:
 
 The scene should treat this module as the source of truth and avoid duplicating gameplay rules in UI code.
 
+Regression coverage for this layer lives in:
+- [`src/game/systems/match.test.ts`](/Users/davis.wang/Documents/aow/src/game/systems/match.test.ts)
+
+That suite currently protects:
+- age progression through all five ages
+- age-gated purchases
+- tower selling
+- shared tower targeting behavior
+- same-age duel ordering
+- `Omega Colossus` matchup intent
+
+## Age Progression Boundary
+
+The battle scene is allowed to:
+- show the current player/enemy ages
+- rebuild the purchase menus when the player's age changes
+- invoke the age-up action through the HUD button
+
+The match system owns:
+- whether a side is eligible to advance
+- base upgrades and tower-slot repositioning on age-up
+- which super belongs to each side's current age
+- content gating so a side cannot buy units or towers from an age it has not reached
+
 ## HUD Strategy
 
 The battle HUD is camera-anchored in world space instead of relying on implicit fixed-position container behavior.
 
 Reason:
 - it keeps clickable bounds aligned with rendered positions after horizontal scrolling
-- it avoids severe regressions for critical controls like `BUY UNITS`, `BUY TOWERS`, `METEOR SHOWER`, and `PLAY AGAIN`
+- it avoids severe regressions for critical controls like `BUY UNITS`, `BUY TOWERS`, age-up, supers, and `PLAY AGAIN`
 
 ## Text Fitting
 
@@ -66,6 +99,44 @@ Use it whenever:
 Regression tests for the sizing logic live in:
 - [`src/game/ui/textFit.test.ts`](/Users/davis.wang/Documents/aow/src/game/ui/textFit.test.ts)
 
+## Camera Input
+
+Camera movement rules now live in:
+- [`src/game/ui/cameraScroll.ts`](/Users/davis.wang/Documents/aow/src/game/ui/cameraScroll.ts)
+
+The battle scene uses this helper so:
+- pointer edge scrolling can stay wide across most of the battlefield
+- the top HUD band can use a much shallower edge zone
+- left/right arrow-key panning shares the same speed model instead of becoming a separate ad hoc path
+
+Regression tests for these input rules live in:
+- [`src/game/ui/cameraScroll.test.ts`](/Users/davis.wang/Documents/aow/src/game/ui/cameraScroll.test.ts)
+
+## Generated Art Layer
+
+The current build uses a dedicated render helper:
+- [`src/game/render/art.ts`](/Users/davis.wang/Documents/aow/src/game/render/art.ts)
+
+It owns:
+- generated sprite textures for units, towers, bases, projectiles, and world dressing
+- generated panel/button textures for the HUD and overlays
+- render-only impact and dust effects
+- animation registration for sprite-driven idle/walk loops
+- per-projectile visual styles so content data can choose stone, arrow, cannonball, bullet, rocket, bomb, plasma, laser, and other effect families explicitly
+
+This keeps presentation upgrades out of [`src/game/systems/match.ts`](/Users/davis.wang/Documents/aow/src/game/systems/match.ts), so the simulation stays authoritative while the scene layer remains free to iterate on visuals.
+
+## Balance Contracts
+
+Content tuning is protected by:
+- [`src/game/data/ageBalance.test.ts`](/Users/davis.wang/Documents/aow/src/game/data/ageBalance.test.ts)
+
+Current protected contracts:
+- all supers stay on the shared `45s` cooldown target
+- `Omega Colossus` stays above the global tower-range ceiling
+- `2`-age-up attackers remain lethal against lower-age non-mega units
+- lower-age mega resistance stays bounded
+
 ## Deployment Model
 
 The app is built as a static site:
@@ -74,4 +145,3 @@ The app is built as a static site:
 - GitHub Pages serves the result
 
 This keeps production hosting simple and makes releases easy to verify locally with `npm run preview`.
-

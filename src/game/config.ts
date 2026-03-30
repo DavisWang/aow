@@ -13,6 +13,8 @@ export const UNIT_SPACING = 12;
 // The activation zone is intentionally wide so camera movement feels forgiving
 // on desktop instead of requiring the cursor to hug the exact screen edge.
 export const CAMERA_EDGE_SCROLL_ZONE = 260;
+export const CAMERA_TOP_EDGE_SCROLL_ZONE = 24;
+export const CAMERA_TOP_EDGE_SCROLL_BAND_HEIGHT = 240;
 export const CAMERA_SCROLL_SPEED = 580;
 export const DEFAULT_STARTING_MONEY = 240;
 export const AGE_UP_XP = 650;
