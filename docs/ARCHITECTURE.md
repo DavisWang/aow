@@ -2,13 +2,14 @@
 
 ## Overview
 
-The game is structured around three layers:
+The game is structured around four layers:
 
 | Layer | Responsibility |
 | --- | --- |
 | Content data | Static definitions for units, towers, supers, and base properties |
 | Simulation | Match state updates: economy, AI, movement, combat, queues, and win/loss |
 | Scene/UI | Rendering, generated art, HUD, menus, overlays, and input wiring |
+| Audio | Synthesized music, SFX playback, unlock handling, and persisted audio state |
 
 ## Boot Flow
 
@@ -50,10 +51,21 @@ It handles:
 - unit movement and targeting
 - tower targeting
 - projectile updates and impact resolution
+- combat audio event emission
 - kill rewards
 - win/loss conditions
 
 The scene should treat this module as the source of truth and avoid duplicating gameplay rules in UI code.
+
+The simulation now also emits lightweight audio events for:
+- projectile launches
+- projectile impacts
+- melee contact hits
+- deaths
+- super casts
+- base damage and destruction
+
+The battle scene drains that queue and decides how to render it sonically, so combat feel improves without moving gameplay authority out of the simulation layer.
 
 Regression coverage for this layer lives in:
 - [`src/game/systems/match.test.ts`](/Users/davis.wang/Documents/aow/src/game/systems/match.test.ts)
@@ -120,11 +132,29 @@ The current build uses a dedicated render helper:
 It owns:
 - generated sprite textures for units, towers, bases, projectiles, and world dressing
 - generated panel/button textures for the HUD and overlays
+- generated HUD icon textures for utility controls, including the audio toggle
 - render-only impact and dust effects
 - animation registration for sprite-driven idle/walk loops
 - per-projectile visual styles so content data can choose stone, arrow, cannonball, bullet, rocket, bomb, plasma, laser, and other effect families explicitly
 
 This keeps presentation upgrades out of [`src/game/systems/match.ts`](/Users/davis.wang/Documents/aow/src/game/systems/match.ts), so the simulation stays authoritative while the scene layer remains free to iterate on visuals.
+
+## Audio Layer
+
+The current build uses a dedicated synthesized audio helper:
+- [`src/game/audio/controller.ts`](/Users/davis.wang/Documents/aow/src/game/audio/controller.ts)
+
+It owns:
+- browser-safe audio unlock and `AudioContext` lifecycle
+- a single low-mix battle music loop
+- family-based SFX synthesis for combat and UI events
+- persisted `audioEnabled` preference storage
+- result stings and other non-simulation audio cues
+
+The corner toggle is shared through:
+- [`src/game/ui/audioToggle.ts`](/Users/davis.wang/Documents/aow/src/game/ui/audioToggle.ts)
+
+That helper keeps the small speaker button consistent between the title and battle scenes while the audio controller remains the single source of truth for enabled/disabled state.
 
 ## Balance Contracts
 

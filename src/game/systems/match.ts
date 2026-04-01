@@ -11,6 +11,7 @@ import {
   AgeDefinition,
   BuildQueueEntry,
   EntityState,
+  MatchAudioEvent,
   MatchState,
   ProjectileDefinition,
   ProjectileState,
@@ -70,6 +71,7 @@ export function createInitialMatchState(startingAge: AgeDefinition = STARTING_AG
     },
     entities: [],
     projectiles: [],
+    audioEvents: [],
     cooldowns: {
       superReadyAt: {
         player: 0,
@@ -92,6 +94,12 @@ export function createInitialMatchState(startingAge: AgeDefinition = STARTING_AG
     nextEntityId: 1,
     nextProjectileId: 1,
   };
+}
+
+export function consumeAudioEvents(state: MatchState): MatchAudioEvent[] {
+  const events = state.audioEvents;
+  state.audioEvents = [];
+  return events;
 }
 
 export function getAgeForSide(state: MatchState, side: Side): AgeDefinition {
@@ -438,6 +446,12 @@ export function activateSuper(state: MatchState, side: Side): boolean {
     endsAt: state.elapsedTime + age.super.duration,
     nextVolleyAt: state.elapsedTime,
   };
+  emitAudioEvent(state, {
+    type: "super-cast",
+    side,
+    visualStyle: age.super.visualStyle,
+    sourceType: "super",
+  });
   return true;
 }
 
@@ -566,6 +580,13 @@ function updateProjectiles(state: MatchState, dt: number): void {
 }
 
 function resolveProjectileImpact(state: MatchState, projectile: ProjectileState): void {
+  emitAudioEvent(state, {
+    type: "projectile-impact",
+    side: projectile.side,
+    visualStyle: projectile.visualStyle,
+    sourceType: projectile.sourceType,
+  });
+
   const enemies = state.entities
     .filter((entity) => entity.hp > 0 && entity.side === projectile.targetSide && entity.entityType === "unit")
     .filter((entity) => projectileHitsEntity(projectile, entity))
@@ -611,6 +632,11 @@ function tryAttackEntity(state: MatchState, attacker: EntityState, target: Entit
     return;
   }
 
+  emitAudioEvent(state, {
+    type: "entity-hit",
+    side: attacker.side,
+    sourceType: "melee",
+  });
   applyDamageToEntity(state, target, attacker.attackDamage, attacker.side);
 }
 
@@ -660,6 +686,12 @@ function spawnProjectile(
     impactRadius: projectile.radius * 4,
     color: projectile.color,
     visualStyle: projectile.visualStyle,
+  });
+  emitAudioEvent(state, {
+    type: "projectile-launch",
+    side: attacker.side,
+    visualStyle: projectile.visualStyle,
+    sourceType: attacker.entityType === "tower" ? "tower" : "unit",
   });
 }
 
@@ -793,13 +825,33 @@ function applyDamageToEntity(state: MatchState, entity: EntityState, damage: num
     return;
   }
 
+  emitAudioEvent(state, {
+    type: "entity-death",
+    side: attackerSide,
+  });
   const multiplier = KILL_REWARD_MULTIPLIER[attackerSide];
   state.economies[attackerSide].money += (entity.rewardMoney ?? 0) * multiplier;
   state.economies[attackerSide].experience += (entity.rewardXp ?? 0) * multiplier;
 }
 
 function applyDamageToBase(state: MatchState, targetSide: Side, damage: number): void {
-  state.bases[targetSide].hp = Math.max(0, state.bases[targetSide].hp - damage);
+  const base = state.bases[targetSide];
+  if (base.hp <= 0) {
+    return;
+  }
+
+  base.hp = Math.max(0, base.hp - damage);
+  emitAudioEvent(state, {
+    type: "base-hit",
+    side: oppositeSide(targetSide),
+  });
+
+  if (base.hp === 0) {
+    emitAudioEvent(state, {
+      type: "base-destroyed",
+      side: oppositeSide(targetSide),
+    });
+  }
 }
 
 function cleanupDeadEntities(state: MatchState): void {
@@ -843,6 +895,16 @@ export function canAffordTower(state: MatchState, side: Side, towerId: string): 
     state.economies[side].money >= getTowerDefinition(towerId).cost &&
     getOpenTowerSlot(state, side) !== null
   );
+}
+
+function emitAudioEvent(
+  state: MatchState,
+  event: Omit<MatchAudioEvent, "elapsedTime">,
+): void {
+  state.audioEvents.push({
+    ...event,
+    elapsedTime: state.elapsedTime,
+  });
 }
 
 export function getBuildQueue(state: MatchState, side: Side): BuildQueueEntry[] {

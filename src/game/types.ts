@@ -9,6 +9,14 @@ export type EntityType = "unit" | "tower" | "base";
 export type AgeId = "prehistoric" | "medieval" | "renaissance" | "modern" | "future";
 export type ProjectileSourceType = "unit" | "tower" | "super";
 export type ProjectileTargetKind = "entity" | "base" | "area";
+export type MatchAudioEventType =
+  | "projectile-launch"
+  | "projectile-impact"
+  | "entity-hit"
+  | "entity-death"
+  | "super-cast"
+  | "base-hit"
+  | "base-destroyed";
 export type ProjectileVisualStyle =
   | "stone"
   | "fossil"
@@ -148,6 +156,14 @@ export interface ProjectileState {
   visualStyle: ProjectileVisualStyle;
 }
 
+export interface MatchAudioEvent {
+  type: MatchAudioEventType;
+  side: Side;
+  elapsedTime: number;
+  visualStyle?: ProjectileVisualStyle;
+  sourceType?: ProjectileSourceType | "melee";
+}
+
 export interface SuperState {
   active: boolean;
   endsAt: number;
@@ -177,6 +193,7 @@ export interface MatchState {
   buildQueues: Record<Side, BuildQueueEntry[]>;
   entities: EntityState[];
   projectiles: ProjectileState[];
+  audioEvents: MatchAudioEvent[];
   cooldowns: CooldownState;
   supers: Record<Side, SuperState>;
   nextQueueId: number;

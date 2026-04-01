@@ -4,10 +4,12 @@ import { AGE_SEQUENCE, STARTING_AGE, getAgeDefinition } from "../data/ages";
 import { getUnitDefinition } from "../data/ages";
 import { EntityState, Side, UnitDefinition } from "../types";
 import {
+  activateSuper,
   advanceAge,
   canAdvanceAge,
   canAffordTower,
   canAffordUnit,
+  consumeAudioEvents,
   createInitialMatchState,
   getAgeForSide,
   getTowerCount,
@@ -122,6 +124,33 @@ describe("match age progression", () => {
     updateMatchState(state, 0.26, []);
 
     expect(state.projectiles).toHaveLength(2);
+    expect(consumeAudioEvents(state).some((event) => event.type === "projectile-launch")).toBe(true);
+  });
+
+  it("emits melee hit and death audio events for contact attacks", () => {
+    const state = createInitialMatchState();
+    const caveman = getUnitDefinition("caveman");
+
+    state.entities.push(createTestUnit("player", caveman, 520, state.elapsedTime, 0));
+    state.entities.push({
+      ...createTestUnit("enemy", caveman, 520 + caveman.width - 10, state.elapsedTime, 0),
+      hp: caveman.attackDamage,
+      maxHp: caveman.maxHp,
+      attackCooldown: 999,
+    });
+
+    updateMatchState(state, 0.2, []);
+
+    const audioEvents = consumeAudioEvents(state).map((event) => event.type);
+    expect(audioEvents).toContain("entity-hit");
+    expect(audioEvents).toContain("entity-death");
+  });
+
+  it("emits a super-cast audio event when a super is activated", () => {
+    const state = createInitialMatchState();
+
+    expect(activateSuper(state, "player")).toBe(true);
+    expect(consumeAudioEvents(state).some((event) => event.type === "super-cast")).toBe(true);
   });
 
   it("keeps omega colossus as a capstone that beats two titans but not four", () => {

@@ -1,5 +1,46 @@
 # Age of War v0.1 Release Prep
 
+## 2026-03-31 Audio Mix Retune
+
+### Plan
+
+- [x] Audit the current synthesized music voicing and SFX gain staging after user feedback.
+- [x] Replace the harsher detuned/gliding battle loop with a more consonant progression and softer voicing.
+- [x] Pull the SFX bus and per-event levels down so supers and other combat cues sit below the previous mix.
+- [x] Re-run `npm run test` and `npm run build`.
+
+### Review
+
+- Retuned [`src/game/audio/controller.ts`](/Users/davis.wang/Documents/aow/src/game/audio/controller.ts) to use a simpler, more consonant four-bar battle progression with softer pad, bass, and lead voicing.
+- Removed the harsher music-side detune/glide choices that were making the loop sound dissonant.
+- Reduced overall SFX gain and cut per-event volumes substantially, with the largest reductions applied to:
+  - `super-cast`
+  - base-hit / base-destroyed pulses
+  - projectile impact families
+- Softened the mix compressor so the audio bus feels less aggressive overall.
+- Verification:
+  - `npm run test` passes
+  - `npm run build` passes
+
+## 2026-03-31 Audio Rewrite 2
+
+### Plan
+
+- [x] Scrap the current synthesized music and SFX design instead of layering another small retune on top.
+- [x] Replace the battle theme with a new consonant score and simpler instrumentation.
+- [x] Replace the combat SFX palette with a new quieter family set while preserving the existing audio toggle and event routing.
+- [x] Re-run `npm run test` and `npm run build`.
+
+### Review
+
+- Replaced [`src/game/audio/controller.ts`](/Users/davis.wang/Documents/aow/src/game/audio/controller.ts) with a new implementation rather than incrementally patching the prior synth design.
+- The new music loop now uses a straightforward diatonic `D minor -> Bb -> F -> C` progression with softer pad, bass, lead, and percussion voices.
+- The new SFX set was rebuilt from scratch around quieter filtered-noise and sine/triangle tones, with far lower transient levels than the first audio pass.
+- Preserved the existing scene wiring, toggle behavior, unlock flow, and match-event routing so the rewrite stayed isolated to the audio layer.
+- Verification:
+  - `npm run test` passes
+  - `npm run build` passes
+
 ## 2026-03-30 Omega Range Ceiling
 
 ### Plan

@@ -83,6 +83,16 @@ Behavior:
 - never damages friendly units
 - all supers currently share a `45s` cooldown target
 
+## Audio
+
+The current build now uses a quiet synthesized battle mix rather than silence.
+
+Current behavior:
+- one shared low-volume battle theme starts once audio is unlocked through player interaction
+- combat SFX cover projectile launches, projectile impacts, melee contact hits, deaths, supers, and base damage/destruction
+- a small speaker button in the top-right corner of the title and battle scenes toggles both music and SFX together
+- the on/off preference persists across scene transitions and page reloads
+
 ## Build Queue
 
 Units do not spawn instantly.
@@ -114,11 +124,13 @@ The battlefield scrolls horizontally, but critical controls are anchored to the 
 - buy tower controls
 - super button
 - advance age button
+- sound/music toggle
 - end-of-match replay button
 
 Current input model:
 - mouse edge scrolling remains available
 - left/right arrow keys also pan the battlefield
+- the top-right speaker button stays fixed to the viewport and is intentionally small so it does not compete with combat controls
 - the top screen band uses a narrower edge-scroll activation zone so clicks on `SUPER` and `ADVANCE` do not accidentally drag the camera
 
 This is a hard requirement because input regressions were previously caused by camera movement.

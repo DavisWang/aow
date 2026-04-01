@@ -4,35 +4,37 @@
 
 - Project: `Age of War`
 - Owner: `Game Developer`
-- Date: `2026-03-29`
+- Date: `2026-03-31`
 - Status: `approved`
 
 ## Build Strategy
 
-1. Add the missing tower-sell interaction in the simulation layer first so the UI can stay thin.
-2. Remove battlefield tower labels and replace them with explicit tower selection plus a sell button.
-3. Normalize tower targeting around a shared frontline firing anchor so tower slot order stops affecting damage reach.
-4. Refresh buy-menu readability and replace text-heavy utility buttons with compact sprite-led controls.
-5. Capture a concrete frame-rate plan based on current hot loops rather than generic optimization advice.
+1. Add a lightweight combat-audio event queue to the simulation layer so SFX hook into authoritative gameplay without changing rules.
+2. Add a shared synthesized audio controller for browser-safe unlock behavior, low-mix battle music, SFX playback, and persisted on/off state.
+3. Add one small reusable top-right speaker toggle for the title and battle scenes.
+4. Wire the battle scene to start/stop music and consume combat audio events.
+5. Refresh only the request-affected docs and current-loop artifacts after verification.
 
 ## Planned Code Changes
 
 | Area | Planned change |
 | --- | --- |
-| `src/game/systems/match.ts` | Add sell-tower support, expose refund values, remove tower-slot range penalties, and shave obvious repeated-scan hot paths. |
-| `src/game/scenes/BattleScene.ts` | Add tower selection, sell affordance, icon-driven top controls, stronger menu labels, and remove battlefield tower captions. |
-| `src/game/render/art.ts` | Add simple HUD icon textures for age-up and sell actions, and expose helper lookups for the new top controls. |
-| `src/game/systems/match.test.ts` | Add regression coverage for selling towers and shared tower firing range behavior. |
-| `docs/project/10-performance-plan.md` | Record likely bottlenecks, quick wins already landed, and the next optimization phases. |
-| `tasks/todo.md` | Track the request-specific plan, review, and verification outcome. |
+| [`src/game/types.ts`](/Users/davis.wang/Documents/aow/src/game/types.ts) | Add match audio event types to the shared runtime contract. |
+| [`src/game/systems/match.ts`](/Users/davis.wang/Documents/aow/src/game/systems/match.ts) | Emit combat audio events for projectiles, melee hits, supers, deaths, and base damage/destruction. |
+| [`src/game/systems/match.test.ts`](/Users/davis.wang/Documents/aow/src/game/systems/match.test.ts) | Add regression coverage for the new audio event surface. |
+| `src/game/audio/*` | Add the synthesized audio controller and persisted preference helper. |
+| [`src/game/ui/audioToggle.ts`](/Users/davis.wang/Documents/aow/src/game/ui/audioToggle.ts) | Add a shared fixed-corner speaker toggle helper. |
+| [`src/game/scenes/TitleScene.ts`](/Users/davis.wang/Documents/aow/src/game/scenes/TitleScene.ts) | Add the title-scene toggle and unlock flow. |
+| [`src/game/scenes/BattleScene.ts`](/Users/davis.wang/Documents/aow/src/game/scenes/BattleScene.ts) | Add battle music lifecycle, event consumption, and battle-scene toggle placement. |
+| [`src/game/render/art.ts`](/Users/davis.wang/Documents/aow/src/game/render/art.ts) | Add speaker and muted icon textures to the generated HUD icon set. |
 
 ## Verification Plan
 
 - `npm run test`
 - `npm run build`
-- local browser preview pass covering:
-  - top-control icon buttons
-  - buy-menu readability on unit and tower cards
-  - tower selection and sell flow
-  - no tower-label clutter on the battlefield
-  - shared tower firing behavior during dense waves
+- local browser verification covering:
+  - title-screen speaker toggle render
+  - battle-scene speaker toggle render
+  - no visible HUD/camera regressions
+  - direct `?scene=battle` boot path still works
+  - request-affected docs refreshed after the runtime work is stable

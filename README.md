@@ -10,6 +10,8 @@ The current build is close to gameplay-complete for the core single-player loop.
 - tower buying with 3 tower slots
 - tower selling from an in-world `X` action
 - super abilities per age with shared `45s` cooldowns
+- low-mix synthesized battle music and combat sound effects
+- persistent corner toggle for sound/music on or off
 - simple enemy AI with passive income and age progression
 - generated sprite art and light animation polish
 - keyboard and edge-scroll camera control
@@ -51,6 +53,7 @@ Useful scripts:
 | Sell a built tower | Click the tower, then click the floating `X` above it |
 | Advance age | Click `ADVANCE` once enough XP is earned |
 | Trigger super | Click `SUPER` when it is off cooldown |
+| Toggle sound/music | Click the small speaker button in the top-right corner |
 | Restart after match end | Click `PLAY AGAIN` |
 
 ## Current Scope
@@ -75,6 +78,8 @@ Included in the current build:
   - `Gun Turret`, `Gatling Gun`, `Missile Launcher`
   - `Pulse Turret`, `Drone Bay`, `Ion Blaster`
 - in-match age advancement once each current-age XP threshold is met
+- synthesized in-browser battle music plus combat and UI sound effects
+- persistent top-right audio toggle shared between title and battle scenes
 - stylized generated sprite presentation
 - top HUD and menu interaction hardened against camera scroll drift
 - data-driven balance coverage for age breakpoints, duel ordering, super cooldowns, and camera-scroll input rules
@@ -83,7 +88,6 @@ Included in the current build:
 
 Not included yet:
 - save/progression
-- audio
 - imported hand-authored sprite sheets
 - mobile-specific UX
 - deep performance optimization for very large late-game unit counts
@@ -103,9 +107,11 @@ Not included yet:
 | [`src/game/data/future.ts`](/Users/davis.wang/Documents/aow/src/game/data/future.ts) | Future content data and AI configuration |
 | [`src/game/scenes/TitleScene.ts`](/Users/davis.wang/Documents/aow/src/game/scenes/TitleScene.ts) | Title screen scene |
 | [`src/game/scenes/BattleScene.ts`](/Users/davis.wang/Documents/aow/src/game/scenes/BattleScene.ts) | Main gameplay scene and HUD |
+| [`src/game/audio/controller.ts`](/Users/davis.wang/Documents/aow/src/game/audio/controller.ts) | Shared synthesized music, SFX, and audio preference controller |
 | [`src/game/systems/match.ts`](/Users/davis.wang/Documents/aow/src/game/systems/match.ts) | Match simulation, economy, combat, AI, and queues |
 | [`src/game/systems/match.test.ts`](/Users/davis.wang/Documents/aow/src/game/systems/match.test.ts) | Match-level regression tests for progression, balance, and duels |
 | [`src/game/render/art.ts`](/Users/davis.wang/Documents/aow/src/game/render/art.ts) | Generated sprite art, UI textures, and render-only effects |
+| [`src/game/ui/audioToggle.ts`](/Users/davis.wang/Documents/aow/src/game/ui/audioToggle.ts) | Shared top-right sound/music toggle helper |
 | [`src/game/ui/cameraScroll.ts`](/Users/davis.wang/Documents/aow/src/game/ui/cameraScroll.ts) | Shared camera edge-scroll and keyboard-pan helpers |
 | [`docs/ARCHITECTURE.md`](/Users/davis.wang/Documents/aow/docs/ARCHITECTURE.md) | Architecture overview |
 | [`docs/GAMEPLAY.md`](/Users/davis.wang/Documents/aow/docs/GAMEPLAY.md) | Current gameplay and controls guide |
@@ -134,6 +140,8 @@ After pushing `main`:
 ## Notes For Future Work
 
 - Add stronger age-up ceremony and audiovisual feedback now that the full ladder is playable.
+- Split music and SFX into separate settings if the single toggle starts feeling too coarse.
+- Consider per-age music variants only if the single battle theme stops carrying the full match.
 - Continue the late-game performance pass for battles with very high unit counts.
 - Add more age-specific battlefield dressing so the environment evolves with the roster.
 - Prefer extending the age registry and data model over baking balance or art rules into the scene code.

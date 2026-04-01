@@ -1,16 +1,29 @@
 import Phaser from "phaser";
+import { audioController } from "../audio/controller";
 import { GAME_HEIGHT, GAME_WIDTH } from "../config";
 import { ensureArt, ensureButtonTexture, ensurePanelTexture, fitDisplayObjectToBox } from "../render/art";
 import { MatchMode } from "../types";
+import { createAudioToggle, AudioToggleView } from "../ui/audioToggle";
 import { fitTextToBox } from "../ui/textFit";
 
 export class TitleScene extends Phaser.Scene {
+  private audioToggle?: AudioToggleView;
+
   constructor() {
     super("title");
   }
 
   create(): void {
     ensureArt(this);
+    audioController.stopBattleMusic();
+    this.input.once("pointerdown", async () => {
+      await audioController.unlock();
+    });
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.audioToggle?.destroy();
+      this.audioToggle = undefined;
+    });
 
     this.cameras.main.setBackgroundColor(0x1d3047);
 
@@ -157,6 +170,9 @@ export class TitleScene extends Phaser.Scene {
     testModeButton.label.setDepth(5);
     testModeHint.setDepth(5);
     frame.setDepth(6);
+
+    this.audioToggle = createAudioToggle(this, GAME_WIDTH - 42, 42);
+    this.audioToggle.container.setDepth(8);
   }
 
   private createTitleButton(
@@ -199,7 +215,9 @@ export class TitleScene extends Phaser.Scene {
       text.setScale(1);
     });
 
-    button.on("pointerdown", () => {
+    button.on("pointerdown", async () => {
+      await audioController.unlock();
+      audioController.playUiClick();
       this.scene.start("battle", { mode });
     });
 

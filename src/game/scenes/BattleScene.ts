@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { audioController } from "../audio/controller";
 import {
   CAMERA_EDGE_SCROLL_ZONE,
   CAMERA_SCROLL_SPEED,
@@ -19,6 +20,7 @@ import {
   canAdvanceAge,
   canAffordUnit,
   cloneAISteps,
+  consumeAudioEvents,
   countUnitsForSide,
   createInitialMatchState,
   getAgeForSide,
@@ -49,6 +51,7 @@ import {
   spawnDust,
   spawnImpact,
 } from "../render/art";
+import { AudioToggleView, createAudioToggle } from "../ui/audioToggle";
 import { getCameraEdgeScrollDelta, getKeyboardCameraScrollDelta } from "../ui/cameraScroll";
 import { fitTextToBox } from "../ui/textFit";
 
@@ -131,6 +134,7 @@ export class BattleScene extends Phaser.Scene {
   private overlaySubtitleText!: Phaser.GameObjects.Text;
   private resultOverlay!: Phaser.GameObjects.Container;
   private resultRetryButton!: ActionButton;
+  private audioToggle?: AudioToggleView;
   private cursorKeys?: Phaser.Types.Input.Keyboard.CursorKeys;
   private testModeEnemyUnitCursor = 0;
   private selectedPlayerTowerId: string | null = null;
@@ -154,6 +158,16 @@ export class BattleScene extends Phaser.Scene {
     this.selectedPlayerTowerId = null;
 
     ensureArt(this);
+    audioController.startBattleMusic();
+    this.input.once("pointerdown", async () => {
+      await audioController.unlock();
+    });
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.audioToggle?.destroy();
+      this.audioToggle = undefined;
+      audioController.stopBattleMusic();
+    });
 
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, PLAYFIELD_HEIGHT);
     this.cameras.main.setBackgroundColor(0x688db0);
@@ -167,6 +181,8 @@ export class BattleScene extends Phaser.Scene {
     this.createHud();
     this.createOverlays();
     this.createTowerSellOverlay();
+    this.audioToggle = createAudioToggle(this, GAME_WIDTH - 34, 36);
+    this.audioToggle.container.setDepth(180);
     this.cursorKeys = this.input.keyboard?.createCursorKeys();
     this.applyModeOverrides();
     this.syncFixedUi();
@@ -183,6 +199,8 @@ export class BattleScene extends Phaser.Scene {
       updateMatchState(this.state, dt, this.aiSteps);
       this.applyModeOverrides();
     }
+
+    this.playPendingAudioEvents();
 
     this.rebuildAgeMenusIfNeeded();
     this.updateCameraScroll(dt);
@@ -723,6 +741,14 @@ export class BattleScene extends Phaser.Scene {
     this.resultRetryButton.container.setVisible(true);
     this.unitMenu.setVisible(false);
     this.towerMenu.setVisible(false);
+    audioController.playResultSting(this.state.winner === "player");
+  }
+
+  private playPendingAudioEvents(): void {
+    const events = consumeAudioEvents(this.state);
+    for (const event of events) {
+      audioController.playMatchAudioEvent(event);
+    }
   }
 
   private syncWorldViews(): void {
@@ -1106,6 +1132,7 @@ export class BattleScene extends Phaser.Scene {
     this.titleOverlay.setPosition(camera.scrollX + GAME_WIDTH / 2, camera.scrollY + 76);
     this.resultOverlay.setPosition(camera.scrollX + GAME_WIDTH / 2, camera.scrollY + GAME_HEIGHT / 2);
     this.resultRetryButton.container.setPosition(camera.scrollX + GAME_WIDTH / 2, camera.scrollY + GAME_HEIGHT / 2 + 82);
+    this.audioToggle?.container.setPosition(camera.scrollX + GAME_WIDTH - 34, camera.scrollY + 36);
   }
 
   private refreshQueueSlots(playerQueue: ReturnType<typeof getBuildQueue>): void {
@@ -1298,8 +1325,10 @@ export class BattleScene extends Phaser.Scene {
       icon.setScale(iconBaseScale);
     });
 
-    background.on("pointerdown", () => {
+    background.on("pointerdown", async () => {
       if (actionButton.enabled) {
+        await audioController.unlock();
+        audioController.playUiClick();
         actionButton.onClick();
       }
     });
@@ -1378,8 +1407,10 @@ export class BattleScene extends Phaser.Scene {
       text.setScale(1);
     });
 
-    background.on("pointerdown", () => {
+    background.on("pointerdown", async () => {
       if (actionButton.enabled) {
+        await audioController.unlock();
+        audioController.playUiClick();
         actionButton.onClick();
       }
     });

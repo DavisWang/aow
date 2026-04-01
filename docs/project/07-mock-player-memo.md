@@ -4,28 +4,28 @@
 
 - Project: `Age of War`
 - Owner: `Mock Player`
-- Date: `2026-03-29`
+- Date: `2026-03-31`
 - Status: `ready_for_review`
 
 ## First-Session Read
 
-The game now reads like a real five-age `Age of War` build rather than a two-age slice.
+The game feels materially less sterile after the audio pass. The build now reads more like a real browser battler instead of a visually complete prototype with the sound turned off.
 
 ## What Feels Better
 
-- The ladder no longer stops at `Medieval`, so the late-match fantasy has real payoff.
-- The generated late-age sprites stay inside the same visual language instead of feeling bolted on from another project.
-- `TEST MODE` now works as a practical content-preview lane because the HUD and registry both understand the full ladder.
+- The quiet battle theme gives the match a sense of momentum without drowning the HUD or the lane action.
+- Supers, projectile fire, impacts, melee contact hits, and deaths now make the battlefield feel responsive.
+- The tiny top-right toggle is easy to ignore when you want to play, but easy to find when you want silence.
 
 ## What Still Feels Thin
 
-- The battlefield itself is still fairly age-neutral, so the biggest progression reads come from rosters, bases, and HUD labels.
-- Age transitions are mechanically useful, but they still lack a ceremonial moment or transition burst.
+- One shared music loop carries the entire match, so later ages still do not sound distinct from earlier ones.
+- The single toggle is pragmatic, but there is no finer control for players who want music on and SFX off, or the reverse.
 
 ## Recommendation
 
 - Keep this as the new playable baseline.
-- Next polish pass should focus on stronger age-up payoff:
-  - a short transition flash or burst
-  - clearer successful-advance feedback
-  - more age-specific world dressing
+- Next audio polish should focus on:
+  - one short age-up sting
+  - a human loudness pass on speakers/headphones
+  - optional separation of music and SFX settings if the single toggle starts feeling limiting

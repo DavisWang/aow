@@ -51,6 +51,8 @@ const UI_STYLES = {
 const HUD_ICON_KEYS = {
   ageAdvance: "ui/icon/age-advance",
   sellTower: "ui/icon/sell-tower",
+  audioOn: "ui/icon/audio-on",
+  audioOff: "ui/icon/audio-off",
 } as const;
 
 const ENTITY_TEXTURE_KEYS = {
@@ -414,6 +416,8 @@ export function ensureArt(scene: Phaser.Scene): void {
   ensureCanvasTexture(scene, "art/world/tower-slot", 24, 24, drawTowerSlotTexture);
   ensureCanvasTexture(scene, HUD_ICON_KEYS.ageAdvance, 48, 48, drawAgeAdvanceIconTexture);
   ensureCanvasTexture(scene, HUD_ICON_KEYS.sellTower, 48, 48, drawSellTowerIconTexture);
+  ensureCanvasTexture(scene, HUD_ICON_KEYS.audioOn, 48, 48, drawAudioOnIconTexture);
+  ensureCanvasTexture(scene, HUD_ICON_KEYS.audioOff, 48, 48, drawAudioOffIconTexture);
   ensureCanvasTexture(scene, IMPACT_TEXTURE_KEYS.stone, 60, 44, drawStoneImpactTexture);
   ensureCanvasTexture(scene, IMPACT_TEXTURE_KEYS.fossil, 66, 48, drawFossilImpactTexture);
   ensureCanvasTexture(scene, IMPACT_TEXTURE_KEYS.ember, 56, 56, drawEmberImpactTexture);
@@ -933,6 +937,29 @@ function drawSellTowerIconTexture(ctx: CanvasRenderingContext2D): void {
   fill(ctx, "#dba845", 24, 28, 6, 6);
   fill(ctx, "#ff8a73", 34, 28, 10, 4);
   fill(ctx, "#ff8a73", 37, 22, 4, 16);
+}
+
+function drawAudioOnIconTexture(ctx: CanvasRenderingContext2D): void {
+  fill(ctx, "#f6d59e", 10, 18, 10, 14);
+  fill(ctx, "#dba845", 20, 14, 8, 22);
+  fill(ctx, "#fff1d3", 28, 14, 4, 6);
+  fill(ctx, "#fff1d3", 32, 18, 4, 4);
+  fill(ctx, "#fff1d3", 28, 28, 4, 6);
+  fill(ctx, "#fff1d3", 34, 10, 4, 8);
+  fill(ctx, "#fff1d3", 38, 18, 4, 12);
+  fill(ctx, "#fff1d3", 34, 30, 4, 8);
+}
+
+function drawAudioOffIconTexture(ctx: CanvasRenderingContext2D): void {
+  drawAudioOnIconTexture(ctx);
+  fill(ctx, "#ff8a73", 32, 12, 4, 4);
+  fill(ctx, "#ff8a73", 28, 16, 4, 4);
+  fill(ctx, "#ff8a73", 24, 20, 4, 4);
+  fill(ctx, "#ff8a73", 20, 24, 4, 4);
+  fill(ctx, "#ff8a73", 16, 28, 4, 4);
+  fill(ctx, "#ff8a73", 32, 28, 4, 4);
+  fill(ctx, "#ff8a73", 28, 24, 4, 4);
+  fill(ctx, "#ff8a73", 24, 20, 4, 4);
 }
 
 function drawStoneImpactTexture(ctx: CanvasRenderingContext2D, width: number, height: number): void {

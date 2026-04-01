@@ -4,16 +4,17 @@
 
 - Project: `Age of War`
 - Owner: `Play Tester`
-- Date: `2026-03-29`
+- Date: `2026-03-31`
 - Verdict: `approved`
 
 ## Coverage
 
 Reviewed:
-- state flow
-- age-progression logic
-- battle HUD sanity
-- current run/test/build commands
+- regression behavior
+- local build health
+- title-scene render
+- battle-scene render
+- request-affected HUD/state flow
 
 ## Evidence
 
@@ -21,17 +22,18 @@ Reviewed:
 | --- | --- | --- |
 | Regression tests | `pass` | `npm run test` |
 | Production build | `pass` | `npm run build` |
-| Full ladder progression logic | `pass` | [`src/game/systems/match.test.ts`](/Users/davis.wang/Documents/aow/src/game/systems/match.test.ts) proves advancement through every implemented age |
-| Late-age content gating | `pass` | [`src/game/systems/match.test.ts`](/Users/davis.wang/Documents/aow/src/game/systems/match.test.ts) covers unit and tower gating beyond Medieval |
-| Browser boot into battle | `pass` | local preview at `http://127.0.0.1:4186/?scene=battle&mode=test` rendered correctly in Chrome |
-| Updated battle HUD copy | `pass` | local Chrome capture showed the revised `full ladder previews` test-mode copy in the battle overlay |
+| Audio event surface | `pass` | [`src/game/systems/match.test.ts`](/Users/davis.wang/Documents/aow/src/game/systems/match.test.ts) now covers projectile launch, melee hit/death, and super-cast events |
+| Title scene still boots correctly | `pass` | [page-2026-04-01T00-04-30-261Z.png](/Users/davis.wang/Documents/aow/.playwright-cli/page-2026-04-01T00-04-30-261Z.png) |
+| Battle scene still boots directly | `pass` | [page-2026-04-01T00-08-57-115Z.png](/Users/davis.wang/Documents/aow/.playwright-cli/page-2026-04-01T00-08-57-115Z.png) |
+| Corner toggle renders in both scenes | `pass` | Title and battle screenshots both show the small top-right speaker control |
+| Local preview availability | `pass` | [http://127.0.0.1:4174/](http://127.0.0.1:4174/) and `http://127.0.0.1:4174/?scene=battle` |
 
 ## Notes
 
-- The browser pass was enough to confirm the live preview still boots and the HUD reflects the expanded scope.
-- Full click-through automation for the Phaser canvas remains the only meaningful verification gap. That affects the browser trace, not the underlying five-age state machine.
+- The browser pass verified scene boot, toggle render, and no obvious HUD/camera drift regressions.
+- Audible mix quality remains the one verification area that still benefits from a human listen on the local machine; automation cannot grade “too loud” vs “quiet enough” the way a player can.
 
 ## Risk Assessment
 
-- Low risk: the main gameplay boundary change is late-age content and progression, and that path now has explicit regression coverage.
-- Remaining practical risk is browser-only automation depth, not registry/runtime correctness.
+- Low risk on gameplay regression: the simulation changes are additive event emission only and are covered by the test suite.
+- Low-to-medium experiential risk on audio taste: the current synthesized mix is stable, but final loudness/timbre preference still depends on real playback hardware and ears.

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- added a synthesized audio pass:
+  - quiet looping battle music
+  - combat SFX for projectile fire/impact, melee contact hits, deaths, supers, and base damage/destruction
+  - persistent top-right sound/music toggle shared by the title and battle scenes
 - moved the project from the original vertical slice to a near-complete five-age build:
   - `Renaissance`
   - `Modern`

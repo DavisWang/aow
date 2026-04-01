@@ -1,5 +1,11 @@
 # Lessons
 
+## 2026-03-31
+
+- For synthesized game audio, do not ship the first musical sketch without sanity-checking consonance and bus balance. Favor simple chord-tone melodies, softer voicing, and conservative gain staging before adding color.
+- In this project, transient SFX should be mixed as accents over the quiet music bed, not as near-full-scale events. Super casts are the first sound to audit because they stack tones and noise and will dominate the mix fastest.
+- If a user says to scrap an audio direction, do not keep iterating around the same musical language. Replace the score and SFX palette wholesale so the next pass is genuinely different, not cosmetically adjusted.
+
 ## 2026-03-27
 
 - When a user correction identifies a recurring implementation miss, record it immediately in this file during the same turn.
