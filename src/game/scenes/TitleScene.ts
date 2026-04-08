@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { audioController } from "../audio/controller";
 import { GAME_HEIGHT, GAME_WIDTH } from "../config";
+import { getLocale, t, toggleLocale } from "../i18n";
 import { ensureArt, ensureButtonTexture, ensurePanelTexture, fitDisplayObjectToBox } from "../render/art";
 import { MatchMode } from "../types";
 import { createAudioToggle, AudioToggleView } from "../ui/audioToggle";
@@ -103,7 +104,7 @@ export class TitleScene extends Phaser.Scene {
     frame.setStrokeStyle(6, 0xf4c66f, 0.42);
 
     const title = this.add
-      .text(GAME_WIDTH / 2, 206, "AGE OF WAR", {
+      .text(GAME_WIDTH / 2, 206, t("title"), {
         fontFamily: "Courier New",
         fontSize: "64px",
         color: "#fdf0c7",
@@ -114,7 +115,7 @@ export class TitleScene extends Phaser.Scene {
     fitTextToBox(title, { maxWidth: GAME_WIDTH - 220, maxHeight: 84, minFontSize: 34 });
 
     const subtitle = this.add
-      .text(GAME_WIDTH / 2, 290, "Prehistoric to Future playable build", {
+      .text(GAME_WIDTH / 2, 290, t("subtitle"), {
         fontFamily: "Courier New",
         fontSize: "26px",
         color: "#f8d68f",
@@ -129,7 +130,7 @@ export class TitleScene extends Phaser.Scene {
       .text(
         GAME_WIDTH / 2,
         GAME_HEIGHT / 2 - 4,
-        "Fight across one lane.\nEarn kill XP to climb all five ages.\nBreak the enemy base before their late game arrives.",
+        t("howToPlay"),
         {
           align: "center",
           fontFamily: "Courier New",
@@ -141,11 +142,11 @@ export class TitleScene extends Phaser.Scene {
       .setOrigin(0.5);
     fitTextToBox(body, { maxWidth: 440, maxHeight: 132, minFontSize: 16, paddingX: 12, paddingY: 10 });
 
-    const newGameButton = this.createTitleButton(GAME_WIDTH / 2 - 146, GAME_HEIGHT / 2 + 150, 248, 72, "NEW GAME", "standard");
-    const testModeButton = this.createTitleButton(GAME_WIDTH / 2 + 146, GAME_HEIGHT / 2 + 150, 248, 72, "TEST MODE", "test");
+    const newGameButton = this.createTitleButton(GAME_WIDTH / 2 - 146, GAME_HEIGHT / 2 + 150, 248, 72, t("newGame"), "standard");
+    const testModeButton = this.createTitleButton(GAME_WIDTH / 2 + 146, GAME_HEIGHT / 2 + 150, 248, 72, t("testMode"), "test");
 
     const testModeHint = this.add
-      .text(GAME_WIDTH / 2 + 146, GAME_HEIGHT / 2 + 196, "UNLIMITED CASH, XP, AND SUPERS", {
+      .text(GAME_WIDTH / 2 + 146, GAME_HEIGHT / 2 + 196, t("testModeHint"), {
         fontFamily: "Courier New",
         fontSize: "14px",
         color: "#f8d68f",
@@ -154,7 +155,7 @@ export class TitleScene extends Phaser.Scene {
     fitTextToBox(testModeHint, { maxWidth: 248, maxHeight: 18, minFontSize: 9 });
 
     const footer = this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT - 52, "By Pwner Studios", {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 52, t("byStudio"), {
         fontFamily: "Courier New",
         fontSize: "20px",
         color: "#f4e0a8",
@@ -173,6 +174,43 @@ export class TitleScene extends Phaser.Scene {
 
     this.audioToggle = createAudioToggle(this, GAME_WIDTH - 42, 42);
     this.audioToggle.container.setDepth(8);
+
+    const langToggle = this.createLangToggle(GAME_WIDTH - 100, 42);
+    langToggle.setDepth(8);
+  }
+
+  private createLangToggle(x: number, y: number): Phaser.GameObjects.Container {
+    const width = 48;
+    const height = 42;
+    const baseKey = ensureButtonTexture(this, `ui/lang-toggle/${width}x${height}`, width, height, "button");
+    const hoverKey = ensureButtonTexture(this, `ui/lang-toggle/${width}x${height}-hover`, width, height, "buttonHover");
+    const container = this.add.container(x, y);
+    const background = this.add.image(0, 0, baseKey).setInteractive({ useHandCursor: true });
+    const label = this.add
+      .text(0, 0, getLocale() === "en" ? "EN" : "中文", {
+        fontFamily: "Courier New",
+        fontSize: "16px",
+        color: "#fdf0c7",
+      })
+      .setOrigin(0.5);
+    container.add([background, label]);
+
+    background.on("pointerover", () => {
+      background.setTexture(hoverKey);
+      container.setScale(1.04);
+    });
+
+    background.on("pointerout", () => {
+      background.setTexture(baseKey);
+      container.setScale(1);
+    });
+
+    background.on("pointerdown", () => {
+      toggleLocale();
+      this.scene.restart();
+    });
+
+    return container;
   }
 
   private createTitleButton(

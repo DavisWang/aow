@@ -1,7 +1,7 @@
 import { AGE_UP_XP } from "../config";
 import { AIScriptStep, AgeDefinition, TowerDefinition, UnitDefinition } from "../types";
 
-// The v0.1 slice is data-driven. The match system reads these definitions to
+// Age data is data-driven. The match system reads these definitions to
 // build entities and AI behavior without hard-coding prehistoric-specific rules.
 const units: UnitDefinition[] = [
   {
@@ -146,7 +146,7 @@ export const PREHISTORIC_AGE: AgeDefinition = {
 
 export const PREHISTORIC_AI_SCRIPT: AIScriptStep[] = [
   // The enemy wave cadence is intentionally steady so the battlefield remains
-  // active during testing and release demos.
+  // active throughout the match.
   {
     id: "enemy-unit-wave",
     action: "buy-unit",

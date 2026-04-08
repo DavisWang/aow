@@ -2,7 +2,7 @@
 
 `Age of War` is a browser-based real-time lane battler built with `Phaser`, `TypeScript`, and `Vite`.
 
-The current build is close to gameplay-complete for the core single-player loop. It now ships a browser-playable five-age ladder with:
+A fully playable five-age lane battler with:
 - title screen
 - one-lane base-vs-base combat
 - functional age progression from `Prehistoric` through `Future`
@@ -56,28 +56,26 @@ Useful scripts:
 | Toggle sound/music | Click the small speaker button in the top-right corner |
 | Restart after match end | Click `PLAY AGAIN` |
 
-## Current Scope
-
-Included in the current build:
+## Game Content
 - all five ages:
   - `Prehistoric`
   - `Medieval`
   - `Renaissance`
   - `Modern`
   - `Future`
-- full current unit roster:
+- full unit roster:
   - `Caveman`, `Stonethrower`, `Dino Rider`
   - `Swordsman`, `Archer`, `Knight`
   - `Musketeer`, `Cannoneer`, `Cavalier`
   - `Ground Infantry`, `Machine Gunner`, `Tank`
   - `Sentinels`, `Plasma Ranger`, `Titan Walker`, `Omega Colossus`
-- full current tower roster:
+- full tower roster:
   - `Stone Guard`, `Fossil Catapult`, `Ember Totem`
   - `Arrow Tower`, `Ballista Tower`, `Fire Cauldron`
   - `Arquebus Tower`, `Bombard Tower`, `Alchemist Tower`
   - `Gun Turret`, `Gatling Gun`, `Missile Launcher`
   - `Pulse Turret`, `Drone Bay`, `Ion Blaster`
-- in-match age advancement once each current-age XP threshold is met
+- in-match age advancement once each age's XP threshold is met
 - synthesized in-browser battle music plus combat and UI sound effects
 - persistent top-right audio toggle shared between title and battle scenes
 - stylized generated sprite presentation
@@ -86,11 +84,11 @@ Included in the current build:
 - desktop-first interaction model
 - local single-player loop against scripted AI
 
-Not included yet:
+Planned future additions:
 - save/progression
-- imported hand-authored sprite sheets
-- mobile-specific UX
-- deep performance optimization for very large late-game unit counts
+- hand-authored sprite sheets
+- mobile UX
+- late-game performance optimization for very large unit counts
 
 ## Project Structure
 
@@ -115,11 +113,11 @@ Not included yet:
 | [`src/game/ui/cameraScroll.ts`](/Users/davis.wang/Documents/aow/src/game/ui/cameraScroll.ts) | Shared camera edge-scroll and keyboard-pan helpers |
 | [`docs/ARCHITECTURE.md`](/Users/davis.wang/Documents/aow/docs/ARCHITECTURE.md) | Architecture overview |
 | [`docs/GAMEPLAY.md`](/Users/davis.wang/Documents/aow/docs/GAMEPLAY.md) | Current gameplay and controls guide |
-| [`docs/RELEASE_v0.1.0.md`](/Users/davis.wang/Documents/aow/docs/RELEASE_v0.1.0.md) | Historical initial release notes and deployment notes |
+| [`docs/RELEASE_v0.1.0.md`](/Users/davis.wang/Documents/aow/docs/RELEASE_v0.1.0.md) | Historical v0.1.0 release notes |
 
 ## Release
 
-Release notes for the active build live in:
+Release notes:
 - [`CHANGELOG.md`](/Users/davis.wang/Documents/aow/CHANGELOG.md)
 - [`docs/RELEASE_v0.1.0.md`](/Users/davis.wang/Documents/aow/docs/RELEASE_v0.1.0.md)
 
@@ -139,7 +137,7 @@ After pushing `main`:
 
 ## Notes For Future Work
 
-- Add stronger age-up ceremony and audiovisual feedback now that the full ladder is playable.
+- Add stronger age-up ceremony and audiovisual feedback.
 - Split music and SFX into separate settings if the single toggle starts feeling too coarse.
 - Consider per-age music variants only if the single battle theme stops carrying the full match.
 - Continue the late-game performance pass for battles with very high unit counts.

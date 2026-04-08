@@ -6,7 +6,7 @@
   - quiet looping battle music
   - combat SFX for projectile fire/impact, melee contact hits, deaths, supers, and base damage/destruction
   - persistent top-right sound/music toggle shared by the title and battle scenes
-- moved the project from the original vertical slice to a near-complete five-age build:
+- expanded the game from the original single age to the full five-age ladder:
   - `Renaissance`
   - `Modern`
   - `Future`
@@ -25,13 +25,13 @@
 - rebalanced units, towers, supers, and age breakpoints around stronger age separation and cleaner same-age duel ordering
 - standardized all supers to a shared `45s` cooldown
 - expanded regression coverage for ladder-wide progression, balance, duel ordering, camera-scroll rules, and content gating
-- refreshed gameplay, architecture, and readme docs for the current near-complete build
+- refreshed gameplay, architecture, and readme docs for the full five-age game
 
 ## 0.1.0 - 2026-03-27
 
 Initial playable release.
 
-- shipped prehistoric vertical slice
+- shipped initial prehistoric age
 - added title screen and battle scene
 - implemented units, towers, supers, queues, AI economy, and win/loss flow
 - hardened HUD interaction while the camera scrolls

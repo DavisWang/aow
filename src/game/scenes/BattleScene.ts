@@ -12,6 +12,7 @@ import {
   PLAYFIELD_HEIGHT,
   WORLD_WIDTH,
 } from "../config";
+import { getLocale, t, tn } from "../i18n";
 import { DEFAULT_AI_SCRIPT, getNextAgeDefinition, getUnitDefinition, STARTING_AGE } from "../data/ages";
 import {
   activateSuper,
@@ -365,7 +366,7 @@ export class BattleScene extends Phaser.Scene {
       0x78e381,
     );
     const label = this.add
-      .text(0, -base.bodyHeight / 2 - 58, side === "player" ? "YOUR BASE" : "ENEMY BASE", {
+      .text(0, -base.bodyHeight / 2 - 58, side === "player" ? t("yourBase") : t("enemyBase"), {
         fontFamily: "Courier New",
         fontSize: "18px",
         color: "#fff0cf",
@@ -515,13 +516,13 @@ export class BattleScene extends Phaser.Scene {
       ...this.queueSlots.flatMap((slot) => [slot.fill, slot.border, slot.label]),
     ]);
 
-    const buyUnitsButton = this.createButton(458, 50, 188, 56, "BUY UNITS", () => {
+    const buyUnitsButton = this.createButton(458, 50, 188, 56, t("buyUnits"), () => {
       this.unitMenu.setVisible(!this.unitMenu.visible);
       if (this.unitMenu.visible) {
         this.towerMenu.setVisible(false);
       }
     });
-    const buyTowersButton = this.createButton(458, 118, 188, 56, "BUY TOWERS", () => {
+    const buyTowersButton = this.createButton(458, 118, 188, 56, t("buyTowers"), () => {
       this.towerMenu.setVisible(!this.towerMenu.visible);
       if (this.towerMenu.visible) {
         this.unitMenu.setVisible(false);
@@ -595,7 +596,7 @@ export class BattleScene extends Phaser.Scene {
       }
       fitDisplayObjectToBox(icon, 72, 40);
       button.container.add(icon);
-      this.decorateShopCardButton(button, icon, unit.name, unit.cost);
+      this.decorateShopCardButton(button, icon, tn(unit.name), unit.cost);
       this.unitMenuButtons.push({ button, unitId: unit.id, cost: unit.cost });
       menu.add(button.container);
     });
@@ -625,7 +626,7 @@ export class BattleScene extends Phaser.Scene {
       }
       fitDisplayObjectToBox(icon, 64, 42);
       button.container.add(icon);
-      this.decorateShopCardButton(button, icon, tower.name, tower.cost);
+      this.decorateShopCardButton(button, icon, tn(tower.name), tower.cost);
       this.towerMenuButtons.push({ button, towerId: tower.id, cost: tower.cost });
       menu.add(button.container);
     });
@@ -638,7 +639,7 @@ export class BattleScene extends Phaser.Scene {
     const bannerKey = ensurePanelTexture(this, "ui/battle/title-banner-420x74", 420, 74, "banner");
     const banner = this.add.image(0, 0, bannerKey);
     this.overlayTitleText = this.add
-      .text(0, -8, "AGE OF WAR", {
+      .text(0, -8, t("title"), {
         fontFamily: "Courier New",
         fontSize: "28px",
         color: "#fff1d0",
@@ -660,7 +661,7 @@ export class BattleScene extends Phaser.Scene {
     const panelKey = ensurePanelTexture(this, "ui/battle/result-panel-460x250", 460, 250, "banner");
     const panel = this.add.image(0, 0, panelKey);
     const heading = this.add
-      .text(0, -56, "BATTLE OVER", {
+      .text(0, -56, t("battleOver"), {
         fontFamily: "Courier New",
         fontSize: "40px",
         color: "#fff0d1",
@@ -675,7 +676,7 @@ export class BattleScene extends Phaser.Scene {
         align: "center",
       })
       .setOrigin(0.5);
-    this.resultRetryButton = this.createButton(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 82, 240, 60, "PLAY AGAIN", () => {
+    this.resultRetryButton = this.createButton(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 82, 240, 60, t("playAgain"), () => {
       this.scene.start("battle", { mode: this.mode });
     });
     this.resultRetryButton.container.setDepth(260);
@@ -728,11 +729,11 @@ export class BattleScene extends Phaser.Scene {
   private showResultOverlay(): void {
     const body = this.resultOverlay.getData("body") as Phaser.GameObjects.Text;
     if (this.state.winner === "player") {
-      body.setText("Enemy base destroyed.\nYour war machine holds.");
+      body.setText(t("winMessage"));
     } else if (this.state.winner === "enemy") {
-      body.setText("Your base fell.\nRebuild and try again.");
+      body.setText(t("loseMessage"));
     } else {
-      body.setText("Both bases collapsed.\nCall it a draw.");
+      body.setText(t("drawMessage"));
     }
     fitTextToBox(body, { maxWidth: 360, maxHeight: 96, minFontSize: 14 });
     // The retry CTA is intentionally separate from the overlay container so it
@@ -955,7 +956,7 @@ export class BattleScene extends Phaser.Scene {
 
   private getEntityCaption(entity: EntityState): string {
     if (entity.entityType === "base") {
-      return entity.side === "player" ? "YOUR BASE" : "ENEMY BASE";
+      return entity.side === "player" ? t("yourBase") : t("enemyBase");
     }
 
     return "";
@@ -1030,19 +1031,19 @@ export class BattleScene extends Phaser.Scene {
     const enemyAge = getAgeForSide(this.state, "enemy");
     const nextPlayerAge = getNextAgeDefinition(playerAge.id);
 
-    this.playerBaseText.setText(`Base HP: ${playerBaseHp}/${this.state.bases.player.maxHp}`);
-    this.enemyBaseText.setText(`Enemy HP: ${enemyBaseHp}/${this.state.bases.enemy.maxHp}`);
-    this.moneyText.setText(`Money: $${Math.floor(playerEconomy.money)}`);
+    this.playerBaseText.setText(`${t("baseHp")}: ${playerBaseHp}/${this.state.bases.player.maxHp}`);
+    this.enemyBaseText.setText(`${t("enemyHp")}: ${enemyBaseHp}/${this.state.bases.enemy.maxHp}`);
+    this.moneyText.setText(`${t("money")}: $${Math.floor(playerEconomy.money)}`);
     this.xpText.setText(
       nextPlayerAge
-        ? `XP: ${Math.floor(playerEconomy.experience)}/${playerAge.unlockXp}`
-        : `XP: ${Math.floor(playerEconomy.experience)} | FINAL AGE`,
+        ? `${t("xp")}: ${Math.floor(playerEconomy.experience)}/${playerAge.unlockXp}`
+        : `${t("xp")}: ${Math.floor(playerEconomy.experience)} | ${t("finalAge")}`,
     );
     fitTextToBox(this.playerBaseText, { maxWidth: 200, maxHeight: 18, minFontSize: 11 });
     fitTextToBox(this.enemyBaseText, { maxWidth: 200, maxHeight: 18, minFontSize: 11 });
     fitTextToBox(this.moneyText, { maxWidth: 200, maxHeight: 22, minFontSize: 13 });
     fitTextToBox(this.xpText, { maxWidth: 200, maxHeight: 18, minFontSize: 11 });
-    this.queueLabelText.setText("Build Queue");
+    this.queueLabelText.setText(t("buildQueue"));
     fitTextToBox(this.queueLabelText, { maxWidth: 210, maxHeight: 16, minFontSize: 9 });
     this.refreshQueueSlots(playerQueue);
 
@@ -1050,17 +1051,15 @@ export class BattleScene extends Phaser.Scene {
     const enemyUnits = countUnitsForSide(this.state, "enemy");
     const towerCount = getTowerCount(this.state, "player");
     this.statusText.setText(
-      `Player: ${playerAge.theme}\nEnemy: ${enemyAge.theme}\nUnits ${playerUnits}/${enemyUnits} | Towers ${towerCount}/${playerAge.base.towerSlots}`,
+      `${t("player")}: ${tn(playerAge.theme)}\n${t("enemy")}: ${tn(enemyAge.theme)}\n${t("units")} ${playerUnits}/${enemyUnits} | ${t("towers")} ${towerCount}/${playerAge.base.towerSlots}`,
     );
     fitTextToBox(this.statusText, { maxWidth: 200, maxHeight: 70, minFontSize: 9 });
 
-    this.overlayTitleText.setText(`PLAYER ${playerAge.theme.toUpperCase()} AGE`);
+    this.overlayTitleText.setText(`${t("player").toUpperCase()} ${tn(playerAge.theme).toUpperCase()} ${t("age")}`);
     fitTextToBox(this.overlayTitleText, { maxWidth: 340, maxHeight: 26, minFontSize: 16 });
-    this.overlaySubtitleText.setText(
-      this.mode === "test"
-        ? `Enemy ${enemyAge.theme} | TEST MODE: free cash, XP, and full ladder previews`
-        : `Enemy ${enemyAge.theme} | Build units, towers, supers, and age up on kill XP`,
-    );
+    const enemyThemeLabel = tn(enemyAge.theme);
+    const modeSubtitle = this.mode === "test" ? t("testSubtitle") : t("normalSubtitle");
+    this.overlaySubtitleText.setText(`${t("enemy")} ${enemyThemeLabel} | ${modeSubtitle}`);
     fitTextToBox(this.overlaySubtitleText, { maxWidth: 392, maxHeight: 24, minFontSize: 10 });
 
     for (const entry of this.unitMenuButtons) {
@@ -1075,21 +1074,21 @@ export class BattleScene extends Phaser.Scene {
     this.superButton.setIcon?.(`${getProjectileTextureKeyForStyle(playerAge.super.visualStyle)}-0`);
     if (cooldownRemaining > 0 || this.state.phase !== "active") {
       this.superButton.setEnabled(false);
-      this.superButton.setLabel("SUPER");
+      this.superButton.setLabel(t("super"));
     } else {
       this.superButton.setEnabled(true);
-      this.superButton.setLabel("SUPER");
+      this.superButton.setLabel(t("super"));
     }
 
     if (!nextPlayerAge) {
       this.ageButton.setEnabled(false);
-      this.ageButton.setLabel("ADVANCE");
+      this.ageButton.setLabel(t("advance"));
     } else if (this.state.phase === "active" && canAdvanceAge(this.state, "player")) {
       this.ageButton.setEnabled(true);
-      this.ageButton.setLabel("ADVANCE");
+      this.ageButton.setLabel(t("advance"));
     } else {
       this.ageButton.setEnabled(false);
-      this.ageButton.setLabel("ADVANCE");
+      this.ageButton.setLabel(t("advance"));
     }
   }
 
@@ -1163,6 +1162,10 @@ export class BattleScene extends Phaser.Scene {
 
   private getQueueSlotLabel(unitId: string): string {
     const name = getUnitDefinition(unitId).name;
+    if (getLocale() === "zh") {
+      const translated = tn(name);
+      return translated[0] ?? "?";
+    }
     const initials = name
       .split(" ")
       .map((part) => part[0])

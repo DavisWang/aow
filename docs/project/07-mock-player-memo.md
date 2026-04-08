@@ -9,7 +9,7 @@
 
 ## First-Session Read
 
-The game feels materially less sterile after the audio pass. The build now reads more like a real browser battler instead of a visually complete prototype with the sound turned off.
+The game feels materially less sterile after the audio pass. The build now reads more like a real browser battler instead of a visually complete game with the sound turned off.
 
 ## What Feels Better
 

@@ -1,4 +1,4 @@
-# Age of War v0.1 Release Prep
+# Age of War — Task Log
 
 ## 2026-03-31 Audio Mix Retune
 
@@ -442,7 +442,7 @@
 - [x] Refresh the current harness artifacts for the remaining age-expansion request and record the chosen creative assumptions where the product spec leaves blanks.
 - [x] Add fully playable `Renaissance`, `Modern`, and `Future` ages to the shared age registry, including AI progression across all five ages.
 - [x] Add unit, tower, base, super, projectile, and impact art/animation coverage for the three new ages.
-- [x] Update title/battle presentation, captions, and docs for the full five-age playable build.
+- [x] Update title/battle presentation, captions, and docs for the full five-age game.
 - [x] Expand regression coverage and re-run browser/build/test verification.
 
 ### Review

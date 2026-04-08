@@ -1,5 +1,5 @@
-// Centralized layout and tuning constants for the current vertical slice.
-// Future balancing work should start here rather than scattering values
+// Centralized layout and tuning constants.
+// Balancing work should start here rather than scattering values
 // throughout scenes and systems.
 export const GAME_WIDTH = 1440;
 export const GAME_HEIGHT = 900;

@@ -2,7 +2,7 @@
   "name": "aow",
   "private": true,
   "version": "0.1.0",
-  "description": "Age of War prehistoric vertical slice built with Phaser and TypeScript",
+  "description": "Age of War — a browser lane battler built with Phaser and TypeScript",
   "homepage": "https://daviswang.github.io/aow/",
   "repository": {
     "type": "git",
