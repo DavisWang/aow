@@ -104,6 +104,13 @@ const TEST_MODE_PLAYER_MONEY = 999_999;
 const TEST_MODE_PLAYER_XP = 9_999;
 const TEST_MODE_ENEMY_MONEY = 999_999;
 
+/** Display labels; factors scale sim dt so legacy speed matches 0.5x (factor 1). */
+const GAME_SPEED_LABELS = ["0.5x", "1x", "2x", "4x"] as const;
+const GAME_SPEED_FACTORS = [1, 2, 4, 8] as const;
+
+const TOP_CONTROLS_PANEL_WIDTH = 188;
+const TOP_CONTROLS_PANEL_HEIGHT = 176;
+
 export class BattleScene extends Phaser.Scene {
   private mode: MatchMode = "standard";
   private state!: MatchState;
@@ -118,6 +125,7 @@ export class BattleScene extends Phaser.Scene {
   private statusText!: Phaser.GameObjects.Text;
   private moneyText!: Phaser.GameObjects.Text;
   private xpText!: Phaser.GameObjects.Text;
+  private enemyXpText!: Phaser.GameObjects.Text;
   private playerBaseText!: Phaser.GameObjects.Text;
   private enemyBaseText!: Phaser.GameObjects.Text;
   private queueLabelText!: Phaser.GameObjects.Text;
@@ -127,6 +135,8 @@ export class BattleScene extends Phaser.Scene {
   private currentMenuAgeId: AgeId | null = null;
   private superButton!: ActionButton;
   private ageButton!: ActionButton;
+  private speedButton!: ActionButton;
+  private speedIndex = 0;
   private towerSellOverlay!: Phaser.GameObjects.Container;
   private towerSellOverlayButton!: Phaser.GameObjects.Arc;
   private towerSellOverlayLabel!: Phaser.GameObjects.Text;
@@ -157,6 +167,7 @@ export class BattleScene extends Phaser.Scene {
     this.currentMenuAgeId = null;
     this.testModeEnemyUnitCursor = 0;
     this.selectedPlayerTowerId = null;
+    this.speedIndex = 0;
 
     ensureArt(this);
     audioController.startBattleMusic();
@@ -192,19 +203,20 @@ export class BattleScene extends Phaser.Scene {
   }
 
   update(_: number, deltaMs: number): void {
-    const dt = Math.min(deltaMs / 1000, 0.033);
+    const baseDt = Math.min(deltaMs / 1000, 0.033);
+    const simDt = baseDt * GAME_SPEED_FACTORS[this.speedIndex];
 
     this.applyModeOverrides();
 
     if (this.state.phase === "active") {
-      updateMatchState(this.state, dt, this.aiSteps);
+      updateMatchState(this.state, simDt, this.aiSteps);
       this.applyModeOverrides();
     }
 
     this.playPendingAudioEvents();
 
     this.rebuildAgeMenusIfNeeded();
-    this.updateCameraScroll(dt);
+    this.updateCameraScroll(simDt);
     this.syncFixedUi();
     this.syncWorldViews();
     this.refreshHud();
@@ -479,6 +491,16 @@ export class BattleScene extends Phaser.Scene {
       color: "#abd9ff",
     });
 
+    const hudRightX = GAME_WIDTH - 32;
+    this.enemyXpText = this.add
+      .text(hudRightX, 94, "", {
+        fontFamily: "Courier New",
+        fontSize: "16px",
+        color: "#abd9ff",
+        align: "right",
+      })
+      .setOrigin(1, 0);
+
     this.queueLabelText = this.add.text(32, 120, "", {
       fontFamily: "Courier New",
       fontSize: "14px",
@@ -512,6 +534,7 @@ export class BattleScene extends Phaser.Scene {
       this.enemyBaseText,
       this.moneyText,
       this.xpText,
+      this.enemyXpText,
       this.queueLabelText,
       ...this.queueSlots.flatMap((slot) => [slot.fill, slot.border, slot.label]),
     ]);
@@ -531,13 +554,13 @@ export class BattleScene extends Phaser.Scene {
     hud.add([buyUnitsButton.container, buyTowersButton.container]);
 
     this.statusText = this.add
-      .text(1400, 88, "", {
+      .text(hudRightX, 118, "", {
         fontFamily: "Courier New",
         fontSize: "18px",
         color: "#f6efd7",
         align: "right",
       })
-      .setOrigin(1, 0.5);
+      .setOrigin(1, 0);
     hud.add(this.statusText);
 
     this.createTopControls();
@@ -548,7 +571,13 @@ export class BattleScene extends Phaser.Scene {
     // Utility actions sit above the battlefield so opening purchase submenus
     // never obscures cooldown-driven controls.
     this.topControls = this.add.container(24, 84).setDepth(140);
-    const panelKey = ensurePanelTexture(this, "ui/battle/top-controls-188x124", 188, 124, "hud");
+    const panelKey = ensurePanelTexture(
+      this,
+      `ui/battle/top-controls-${TOP_CONTROLS_PANEL_WIDTH}x${TOP_CONTROLS_PANEL_HEIGHT}`,
+      TOP_CONTROLS_PANEL_WIDTH,
+      TOP_CONTROLS_PANEL_HEIGHT,
+      "hud",
+    );
     const panel = this.add.image(0, 0, panelKey).setOrigin(0);
 
     this.superButton = this.createIconButton(
@@ -570,7 +599,13 @@ export class BattleScene extends Phaser.Scene {
       }
     });
     this.ageButton.setEnabled(false);
-    this.topControls.add([panel, this.superButton.container, this.ageButton.container]);
+
+    this.speedButton = this.createButton(94, 142, 164, 40, GAME_SPEED_LABELS[this.speedIndex], () => {
+      this.speedIndex = (this.speedIndex + 1) % GAME_SPEED_LABELS.length;
+      this.speedButton.setLabel(GAME_SPEED_LABELS[this.speedIndex]);
+    });
+
+    this.topControls.add([panel, this.superButton.container, this.ageButton.container, this.speedButton.container]);
   }
 
   private createUnitMenu(age: AgeDefinition): Phaser.GameObjects.Container {
@@ -1030,6 +1065,8 @@ export class BattleScene extends Phaser.Scene {
     const playerAge = getAgeForSide(this.state, "player");
     const enemyAge = getAgeForSide(this.state, "enemy");
     const nextPlayerAge = getNextAgeDefinition(playerAge.id);
+    const nextEnemyAge = getNextAgeDefinition(enemyAge.id);
+    const enemyEconomy = this.state.economies.enemy;
 
     this.playerBaseText.setText(`${t("baseHp")}: ${playerBaseHp}/${this.state.bases.player.maxHp}`);
     this.enemyBaseText.setText(`${t("enemyHp")}: ${enemyBaseHp}/${this.state.bases.enemy.maxHp}`);
@@ -1039,10 +1076,16 @@ export class BattleScene extends Phaser.Scene {
         ? `${t("xp")}: ${Math.floor(playerEconomy.experience)}/${playerAge.unlockXp}`
         : `${t("xp")}: ${Math.floor(playerEconomy.experience)} | ${t("finalAge")}`,
     );
+    this.enemyXpText.setText(
+      nextEnemyAge
+        ? `${t("enemyXp")}: ${Math.floor(enemyEconomy.experience)}/${enemyAge.unlockXp}`
+        : `${t("enemyXp")}: ${Math.floor(enemyEconomy.experience)} | ${t("finalAge")}`,
+    );
     fitTextToBox(this.playerBaseText, { maxWidth: 200, maxHeight: 18, minFontSize: 11 });
     fitTextToBox(this.enemyBaseText, { maxWidth: 200, maxHeight: 18, minFontSize: 11 });
     fitTextToBox(this.moneyText, { maxWidth: 200, maxHeight: 22, minFontSize: 13 });
     fitTextToBox(this.xpText, { maxWidth: 200, maxHeight: 18, minFontSize: 11 });
+    fitTextToBox(this.enemyXpText, { maxWidth: 320, maxHeight: 18, minFontSize: 11 });
     this.queueLabelText.setText(t("buildQueue"));
     fitTextToBox(this.queueLabelText, { maxWidth: 210, maxHeight: 16, minFontSize: 9 });
     this.refreshQueueSlots(playerQueue);
@@ -1053,7 +1096,7 @@ export class BattleScene extends Phaser.Scene {
     this.statusText.setText(
       `${t("player")}: ${tn(playerAge.theme)}\n${t("enemy")}: ${tn(enemyAge.theme)}\n${t("units")} ${playerUnits}/${enemyUnits} | ${t("towers")} ${towerCount}/${playerAge.base.towerSlots}`,
     );
-    fitTextToBox(this.statusText, { maxWidth: 200, maxHeight: 70, minFontSize: 9 });
+    fitTextToBox(this.statusText, { maxWidth: 320, maxHeight: 58, minFontSize: 9 });
 
     this.overlayTitleText.setText(`${t("player").toUpperCase()} ${tn(playerAge.theme).toUpperCase()} ${t("age")}`);
     fitTextToBox(this.overlayTitleText, { maxWidth: 340, maxHeight: 26, minFontSize: 16 });

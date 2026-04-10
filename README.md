@@ -3,7 +3,7 @@
 `Age of War` is a browser-based real-time lane battler built with `Phaser`, `TypeScript`, and `Vite`.
 
 A fully playable five-age lane battler with:
-- title screen
+- title screen with English / Simplified Chinese toggle (`EN` / `中文`)
 - one-lane base-vs-base combat
 - functional age progression from `Prehistoric` through `Future`
 - unit buying with a 5-slot build queue
@@ -12,10 +12,11 @@ A fully playable five-age lane battler with:
 - super abilities per age with shared `45s` cooldowns
 - low-mix synthesized battle music and combat sound effects
 - persistent corner toggle for sound/music on or off
-- simple enemy AI with passive income and age progression
+- simple enemy AI with passive money and passive XP, double kill rewards, and age progression
 - generated sprite art and light animation polish
 - keyboard and edge-scroll camera control
 - roster and age-breakpoint regression coverage
+- bottom HUD: player XP vs next-age threshold on the left; enemy XP vs next-age threshold on the right
 - win/loss flow and replay
 
 ## Quick Start
@@ -52,6 +53,7 @@ Useful scripts:
 | Buy towers | Click `BUY TOWERS`, then click a tower in the submenu |
 | Sell a built tower | Click the tower, then click the floating `X` above it |
 | Advance age | Click `ADVANCE` once enough XP is earned |
+| Change game speed | Click the speed button below `ADVANCE` to cycle `0.5x` → `1x` → `2x` → `4x` |
 | Trigger super | Click `SUPER` when it is off cooldown |
 | Toggle sound/music | Click the small speaker button in the top-right corner |
 | Restart after match end | Click `PLAY AGAIN` |
@@ -96,6 +98,7 @@ Planned future additions:
 | --- | --- |
 | [`src/main.ts`](/Users/davis.wang/Documents/aow/src/main.ts) | Phaser bootstrap and scene selection |
 | [`src/game/config.ts`](/Users/davis.wang/Documents/aow/src/game/config.ts) | Shared gameplay and layout constants |
+| [`src/game/i18n.ts`](/Users/davis.wang/Documents/aow/src/game/i18n.ts) | Locale state, `t()` / `tn()` strings for EN and Simplified Chinese |
 | [`src/game/types.ts`](/Users/davis.wang/Documents/aow/src/game/types.ts) | Core runtime and content types |
 | [`src/game/data/ages.ts`](/Users/davis.wang/Documents/aow/src/game/data/ages.ts) | Ordered age registry and shared content lookups |
 | [`src/game/data/prehistoric.ts`](/Users/davis.wang/Documents/aow/src/game/data/prehistoric.ts) | Prehistoric content data and AI configuration |

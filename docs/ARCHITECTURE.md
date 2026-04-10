@@ -8,7 +8,7 @@ The game is structured around four layers:
 | --- | --- |
 | Content data | Static definitions for units, towers, supers, and base properties |
 | Simulation | Match state updates: economy, AI, movement, combat, queues, and win/loss |
-| Scene/UI | Rendering, generated art, HUD, menus, overlays, and input wiring |
+| Scene/UI | Rendering, generated art, HUD, menus, overlays, input wiring, and i18n-backed labels |
 | Audio | Synthesized music, SFX playback, unlock handling, and persisted audio state |
 
 ## Boot Flow
@@ -33,7 +33,7 @@ Key ideas:
 - towers define their own range, cadence, and projectile profile
 - an age definition bundles units, towers, base configuration, and super configuration
 - an ordered age registry decides what comes next
-- AI behavior is described through timed script entries gated by the enemy's current age
+- AI behavior is described through script entries gated by the enemy's current age (scheduled buys, towers, and supers; age-up attempts whenever XP allows)
 
 The match state is side-aware for ages, so player and enemy can progress independently while existing entities remain valid.
 
@@ -45,6 +45,7 @@ This keeps new ages mostly a data addition problem instead of a scene rewrite pr
 
 It handles:
 - build queue processing
+- passive money and passive experience (enemy-only drip in the current tuning)
 - scripted enemy AI
 - side-specific age advancement
 - super volleys
@@ -97,7 +98,7 @@ The battle HUD is camera-anchored in world space instead of relying on implicit 
 
 Reason:
 - it keeps clickable bounds aligned with rendered positions after horizontal scrolling
-- it avoids severe regressions for critical controls like `BUY UNITS`, `BUY TOWERS`, age-up, supers, and `PLAY AGAIN`
+- it avoids severe regressions for critical controls like `BUY UNITS`, `BUY TOWERS`, age-up, simulation speed, supers, and `PLAY AGAIN`
 
 ## Text Fitting
 

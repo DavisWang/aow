@@ -63,6 +63,7 @@ const translations: Record<string, Record<Locale, string>> = {
   enemyHp: { en: "Enemy HP", zh: "敌方血量" },
   money: { en: "Money", zh: "金钱" },
   xp: { en: "XP", zh: "经验" },
+  enemyXp: { en: "Enemy XP", zh: "敌方经验" },
   finalAge: { en: "FINAL AGE", zh: "最终时代" },
   buildQueue: { en: "Build Queue", zh: "建造队列" },
   player: { en: "Player", zh: "玩家" },

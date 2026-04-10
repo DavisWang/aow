@@ -31,6 +31,10 @@ const PASSIVE_MONEY_PER_SECOND: Record<Side, number> = {
   player: 0,
   enemy: 24,
 };
+const PASSIVE_EXPERIENCE_PER_SECOND: Record<Side, number> = {
+  player: 0,
+  enemy: 5,
+};
 const KILL_REWARD_MULTIPLIER: Record<Side, number> = {
   player: 1,
   enemy: 2,
@@ -200,6 +204,7 @@ export function updateMatchState(state: MatchState, dt: number, aiSteps: AIScrip
 function applyPassiveIncome(state: MatchState, dt: number): void {
   for (const side of ["player", "enemy"] as const) {
     state.economies[side].money += PASSIVE_MONEY_PER_SECOND[side] * dt;
+    state.economies[side].experience += PASSIVE_EXPERIENCE_PER_SECOND[side] * dt;
   }
 }
 

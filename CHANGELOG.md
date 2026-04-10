@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- added English / Simplified Chinese i18n with a title-screen language toggle; battle HUD and shop strings follow the selected locale
+- added battle simulation speed control (`0.5x`–`4x`) on a button below `ADVANCE`
+- enemy receives passive experience (`5` XP/s) in addition to passive money; bottom HUD shows enemy XP vs current-age unlock threshold (mirrors the player XP line)
+- removed minimum elapsed-time gates on AI age-up attempts so the enemy ages when XP allows, like the player
 - added a synthesized audio pass:
   - quiet looping battle music
   - combat SFX for projectile fire/impact, melee contact hits, deaths, supers, and base damage/destruction

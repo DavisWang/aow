@@ -11,7 +11,7 @@ The player and AI both:
 - try to destroy the opposing base
 - can advance into the next age once enough XP is earned
 
-The AI also receives passive income so the lane stays active.
+The AI also receives passive money and passive experience so the lane stays active and age-ups stay competitive.
 
 The match ends when either base reaches `0` HP.
 
@@ -110,9 +110,10 @@ This keeps unit production readable and creates timing decisions without adding 
 The AI is intentionally simple but active enough to pressure the player.
 
 Current advantages:
-- passive income to sustain constant pressure
+- passive money (`$24`/s) and passive experience (`5` XP/s)
 - double money and XP rewards for kills
-- scripted purchasing priorities, age-up timing, tower timings, and super timing across all ages
+- scripted purchasing priorities, tower timings, and super timing across all ages
+- enemy age-up as soon as its XP meets the current-age threshold (same rule as the player; no extra wait)
 
 Constraint:
 - the match should still remain beatable with competent play
@@ -124,14 +125,21 @@ The battlefield scrolls horizontally, but critical controls are anchored to the 
 - buy tower controls
 - super button
 - advance age button
+- simulation speed button (below advance; cycles `0.5x`, `1x`, `2x`, `4x`)
 - sound/music toggle
 - end-of-match replay button
+
+Bottom bar information:
+- left: player base HP, enemy base HP, player money, player `XP` vs current-age unlock (or final-age readout)
+- right: enemy `XP` vs current-age unlock (or final-age readout), then age themes and unit/tower counts
 
 Current input model:
 - mouse edge scrolling remains available
 - left/right arrow keys also pan the battlefield
 - the top-right speaker button stays fixed to the viewport and is intentionally small so it does not compete with combat controls
-- the top screen band uses a narrower edge-scroll activation zone so clicks on `SUPER` and `ADVANCE` do not accidentally drag the camera
+- the top screen band uses a narrower edge-scroll activation zone so clicks on `SUPER`, `ADVANCE`, and the speed button do not accidentally drag the camera
+
+Simulation speed scales match time (units, combat, economy, AI) and keyboard/mouse camera panning together. `0.5x` matches the historical default pace before speed controls existed.
 
 This is a hard requirement because input regressions were previously caused by camera movement.
 
